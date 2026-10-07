@@ -185,14 +185,14 @@ test('test vouchers and virtual location are restricted to selected accounts',as
  assert.equal((await call('my_test_pilot')).enabled,false);
  assert.equal((await db.query('select id from locations where id=$1',[testLocation])).rows.length,0);
  await rejected(()=>call('claim_test_receipt',['PRUEBA-60000']),/no participa/);
- await rejected(()=>call('activate_my_test_crowns'),/no participa/);
+ await rejected(()=>call('activate_my_test_crowns'),/does not exist/);
  await rejected(()=>call('create_redemption',[testLocation,1000,crypto.randomUUID()]),/Local no disponible/);
  await rejected(()=>call('announce_location',[testLocation]),/Local no disponible/);
  await rejected(()=>db.query('select * from test_vouchers'),/permission denied/);
  await db.exec('set role anon');assert.equal((await db.query('select id from locations where id=$1',[testLocation])).rows.length,0);
  await rejected(()=>call('claim_test_receipt',['PRUEBA-60000']),/permission denied/);await db.exec('reset role');
 });
-test('60000 test receipt earns 2400, validates a discount, preserves idempotency and activates only test purchases',async()=>{
+test('60000 receipt earns 2400, validates a discount and waits 24 hours after redemption',async()=>{
  await uid(martin);const p=await call('my_test_pilot');assert.equal(p.participant,true);
  await rejected(()=>call('claim_test_receipt',['PRUEBA-NOEXISTE']),/no encontrado/);
  const ficha=await call('create_redemption',[p.location_id,1000,crypto.randomUUID()]);
@@ -203,8 +203,12 @@ test('60000 test receipt earns 2400, validates a discount, preserves idempotency
  await uid(martin);
  const member=(await db.query('select member_code from profiles where id=$1',[martin])).rows[0].member_code;
  await call('pos_record_sale',[local,'real-pending-control',10000,1,[member]]);
- assert.equal((await call('activate_my_test_crowns')).activated,2400);
- assert.equal((await call('activate_my_test_crowns')).activated,0);
+ const deadline=(await db.query("select extract(epoch from (available_at-created_at))::int as seconds from ledger where receipt_id=$1 and kind='purchase'",[result.receipt_id])).rows[0].seconds;
+ assert.equal(deadline,86400);
+ await rejected(()=>call('activate_my_test_crowns'),/does not exist/);
+ // Advance only this fixture's deadline to exercise expiration without a production shortcut.
+ await db.query("update ledger set available_at=now()-interval '1 second' where receipt_id=$1",[result.receipt_id]);
+ assert.equal((await call('my_wallet')).balance,8400);assert.equal((await call('my_wallet')).balance,8400);
  const after=await call('my_wallet');assert.equal(after.balance,8400);assert.equal(after.pending,600);
  await call('transfer_crowns',[luis,1000,crypto.randomUUID()]);assert.equal((await call('my_wallet')).balance,7400);
 });
@@ -213,7 +217,9 @@ test('remaining vouchers use the current rank and cap; cancellation reverses and
  await uid(luis);assert.equal((await call('claim_test_receipt',['PRUEBA-30000'])).earned,1200);
  assert.equal((await call('claim_test_receipt',['PRUEBA-90000'])).earned,5400);
  assert.equal((await call('claim_test_receipt',['PRUEBA-120000'])).earned,8000);
- assert.equal((await call('activate_my_test_crowns')).activated,14600);
+ assert.equal((await call('my_wallet')).pending,14600);
+ await db.query("update ledger set available_at=now()-interval '1 second' where user_id=$1 and kind='purchase' and not settled",[luis]);
+ assert.equal((await call('my_wallet')).pending,0);
  const p=await call('my_test_pilot');assert.equal(p.vouchers.filter(v=>v.claimed).length,5);
  await call('staff_cancel_sale',[p.location_id,'PRUEBA-60000']);await call('staff_cancel_sale',[p.location_id,'PRUEBA-60000']);
  await uid(martin);assert.equal((await call('my_wallet')).balance,6000);
@@ -225,7 +231,7 @@ test('closing the pilot releases reservations and disables claims without silent
  await call('admin_close_test_pilot');assert.equal((await call('my_wallet')).balance,before);
  assert.equal((await call('my_test_pilot')).enabled,false);
  await rejected(()=>call('claim_test_receipt',['PRUEBA-30000']),/no participa/);
- await rejected(()=>call('activate_my_test_crowns'),/no participa/);
+ await rejected(()=>call('activate_my_test_crowns'),/does not exist/);
  assert.equal((await db.query('select status from redemptions where id=$1',[ficha.id])).rows[0].status,'expired');
  await db.exec('set role authenticated');assert.equal((await db.query('select id from locations where id=$1',[p.location_id])).rows.length,0);await db.exec('reset role');
 });

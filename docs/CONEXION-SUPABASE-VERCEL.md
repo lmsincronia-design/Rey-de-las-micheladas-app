@@ -12,6 +12,7 @@ En **SQL Editor**, ejecuta completos, en este orden:
 2. `supabase/migrations/202610070002_admin_credits.sql`
 3. `supabase/migrations/202610070003_tier_rates.sql`
 4. `supabase/migrations/202610070004_test_pilot.sql`
+5. `supabase/migrations/202610070005_enforce_receipt_wait.sql`
 
 Si ya aplicaste la primera migración, ejecuta **solo las pendientes, desde la segunda**. Incluyen acreditaciones manuales, nuevos porcentajes y boletas ficticias de prueba.
 

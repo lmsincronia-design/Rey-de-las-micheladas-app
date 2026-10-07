@@ -14,7 +14,7 @@ try{
  const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.routeWebSocket('wss://club-test.supabase.co/**',ws=>ws.close());
  const martin='00000000-0000-4000-8000-000000000001',luis='00000000-0000-4000-8000-000000000002';
- const calls=[];let balance=5000,muted=false,sharing=true,isAdmin=false;const credits=[];let pilot=null;
+ const calls=[];let balance=5000,pending=1200,muted=false,sharing=true,isAdmin=false;const credits=[];let pilot=null;
  const token=`${Buffer.from('{}').toString('base64url')}.${Buffer.from(JSON.stringify({sub:martin,exp:Math.floor(Date.now()/1000)+3600})).toString('base64url')}.test`;
  const user={id:martin,aud:'authenticated',role:'authenticated',email:'martin@example.test',email_confirmed_at:new Date().toISOString(),user_metadata:{},app_metadata:{provider:'email'},created_at:new Date().toISOString()};
  const local={id:'10000000-0000-4000-8000-000000000001',name:'Local de prueba',address:'Dirección de prueba',commune:'Santiago',menu_url:'https://qrfy.io/p/oOBx-dlqTy',active:true,verified:true};
@@ -29,7 +29,7 @@ try{
  else if(path==='/rest/v1/profiles')data={id:martin,first_name:'Martín',last_name:'Soto',rut:'123456785',phone:'+56912345678',birthday:'1990-10-08',member_code:'ABCDEF123456',share_activity:sharing};
  else if(path==='/rest/v1/notifications')data=[];
  else if(path==='/rest/v1/ledger'||path==='/rest/v1/redemptions')data=[];
- else if(path.endsWith('/my_wallet'))data={balance,pending:1200,debt:0,spending:30000,tier:'Plebeyo',pct:4};
+ else if(path.endsWith('/my_wallet'))data={balance,pending,debt:0,spending:30000,tier:'Plebeyo',pct:4};
  else if(path.endsWith('/my_staff_role'))data=isAdmin?{role:'admin',location_id:null}:null;
  else if(path.endsWith('/admin_summary'))data={members:2,friends:1,balance,pending:1200,receipts:1,locations:1};
  else if(path.endsWith('/admin_locations'))data=[local];
@@ -38,8 +38,7 @@ try{
  else if(path.endsWith('/admin_credit_history'))data=credits;
  else if(path.endsWith('/my_test_pilot'))data=pilot||{enabled:false,is_admin:isAdmin};
  else if(path.endsWith('/admin_prepare_test_pilot')){balance+=5000;pilot={enabled:true,configured:true,is_admin:true,participant:true,martin_code:body.martin_code,luis_code:body.luis_code,location_id:local.id,vouchers:[15000,30000,60000,90000,120000].map(amount=>({code:'PRUEBA-'+amount,amount,claimed:false}))};data=pilot;}
- else if(path.endsWith('/claim_test_receipt')){const v=pilot.vouchers.find(v=>v.code===body.code_value);data={amount:v.amount,earned:2400,already_claimed:v.claimed};v.claimed=true;v.member_name='Martín';}
- else if(path.endsWith('/activate_my_test_crowns')){balance+=2400;data={activated:2400};}
+ else if(path.endsWith('/claim_test_receipt')){const v=pilot.vouchers.find(v=>v.code===body.code_value);if(!v){await route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({message:'Código de boleta de prueba no encontrado'})});return;}data={amount:v.amount,earned:2400,already_claimed:v.claimed};if(!v.claimed)pending+=2400;v.claimed=true;v.member_name='Martín';}
  else if(path.endsWith('/admin_close_test_pilot')){pilot.enabled=false;data=null;}
  else if(path.endsWith('/my_friends'))data=[{id:'20000000-0000-4000-8000-000000000001',other_id:luis,first_name:'Luis',last_name:'S.',status:'accepted',incoming:false,muted}];
  else if(path.endsWith('/mute_friend')){muted=body.muted_value;data=null;}
@@ -77,14 +76,22 @@ try{
  await page.goto(base+'/coronas');await page.getByRole('heading',{name:'♛ $8.000'}).waitFor();
  await page.goto(base+'/pruebas');await page.getByRole('heading',{name:'Preparar Martín y Luis'}).waitFor();
  await page.getByLabel('Cuenta de Martín').selectOption('ABCDEF123456');await page.getByLabel('Cuenta de Luis').selectOption('123456ABCDEF');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Preparar las cinco boletas'}).click();await page.getByRole('heading',{name:'Las cinco boletas'}).waitFor();assert.equal(balance,13000);
- await page.getByLabel('Código de la boleta').fill('PRUEBA-60000');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByText('Canjeada por Martín').waitFor();
- await page.getByRole('button',{name:'Activar mis coronas de prueba'}).click();await page.getByRole('status').filter({hasText:/coronas de prueba activadas/}).waitFor();assert.equal(balance,15400);
- assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Pilot mobile overflow');await page.screenshot({path:'test/artifacts/pruebas-mobile.png',fullPage:true});
+ await page.goto(base+'/coronas');await page.getByRole('heading',{name:'Ingresa tu boleta',exact:true}).waitFor();
+ const walletOrder=await page.locator('.balance-card h2,.wallet-actions h2').allTextContents();assert.deepEqual(walletOrder,['♛ $13.000','Ingresa tu boleta','Usarlas en una junta','Coronas para un amigo']);
+ await page.getByLabel('Código de la boleta').fill('PRUEBA-NOEXISTE');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByRole('status').filter({hasText:/no encontrado/}).waitFor();assert.equal(balance,13000);
+ await page.getByLabel('Código de la boleta').fill('PRUEBA-60000');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByRole('status').filter({hasText:/Boleta canjeada/}).waitFor();assert.equal(balance,13000);assert.equal(pending,3600);
+ await page.getByText(/\$3.600 por activar/).waitFor();assert.equal(await page.getByRole('button',{name:'Activar mis coronas de prueba'}).count(),0);
+ await page.getByLabel('Código de la boleta').fill('PRUEBA-60000');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByRole('status').filter({hasText:/Ya habías canjeado/}).waitFor();assert.equal(pending,3600);
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Wallet receipt mobile overflow');await page.screenshot({path:'test/artifacts/coronas-boleta-mobile.png',fullPage:true});
+ await page.setViewportSize({width:1440,height:1000});
+ const boxes=await page.locator('.wallet-actions > section').evaluateAll(items=>items.map(item=>{const r=item.getBoundingClientRect();return {top:r.top,bottom:r.bottom};}));assert.ok(boxes[1].top>=boxes[0].bottom&&boxes[2].top>=boxes[1].bottom,'Wallet actions must remain stacked on desktop');
+ await page.screenshot({path:'test/artifacts/coronas-boleta-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:844});
+ await page.goto(base+'/pruebas');await page.getByText('Canjeada por Martín').waitFor();
  await page.goto(base+'/perfil');await page.getByRole('button',{name:'Cerrar sesión',exact:true}).click();await page.getByRole('link',{name:'Unirme al Club'}).waitFor();await page.getByRole('link',{name:'Ver la carta ↗',exact:true}).click();assert.equal(await page.getByText('Rey de pruebas · NO ES UN LOCAL REAL',{exact:true}).count(),0);
  await page.goto(base+'/entrar');await page.getByLabel('Correo electrónico').fill('martin@example.test');await page.getByLabel('Contraseña',{exact:true}).fill('UnaClaveSegura123');await page.getByRole('button',{name:'Entrar al Club →'}).click();await page.getByText('HOLA, MARTÍN').waitFor();await page.getByRole('heading',{name:'Rey de pruebas · NO ES UN LOCAL REAL',exact:true}).waitFor();
  await page.goto(base+'/pruebas');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Cerrar la prueba',exact:true}).click();await page.getByText('PRUEBA CERRADA',{exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Canjear boleta',exact:true}).count(),0);
  await page.goto(base+'/rangos');await page.getByRole('heading',{name:'Guardia Real',exact:true}).waitFor();for(const pct of [4,6,8,10,12])await page.getByText(pct+'%',{exact:true}).waitFor();
  await page.goto(base+'/carta-prueba');await page.getByRole('heading',{name:'LA JUNTA DE PRUEBA.'}).waitFor();
  await page.setViewportSize({width:1440,height:1000});await page.goto(base);await page.getByText('HOLA, MARTÍN').waitFor();await page.screenshot({path:'test/artifacts/inicio-desktop.png',fullPage:true});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
- assert.deepEqual(errors,[]);console.log('Browser: registration validation, confirmation, login, recovery, menu-open notification, friend mute, invite, transfer, admin credit confirmation/cancel/history, pilot setup/claim/activation/closure, new tiers, test menu, 10 mobile routes and desktop layout passed (simulated Supabase HTTP).');
+ assert.deepEqual(errors,[]);console.log('Browser: registration validation, confirmation, login, recovery, menu-open notification, friend mute, invite, transfer, admin credit confirmation/cancel/history, pilot setup/closure, wallet receipt claim/retry/pending balance and vertical order, new tiers, test menu, 10 mobile routes and desktop layout passed (simulated Supabase HTTP).');
 }finally{await browser?.close();server.kill();}

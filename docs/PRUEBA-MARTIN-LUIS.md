@@ -22,7 +22,8 @@ La integración Git no ejecuta estas migraciones por sí sola. Aplica en SQL Edi
 
 1. [002_admin_credits.sql](../supabase/migrations/202610070002_admin_credits.sql): acreditaciones con auditoría.
 2. [003_tier_rates.sql](../supabase/migrations/202610070003_tier_rates.sql): nuevos porcentajes y Guardia Real.
-3. [004_test_pilot.sql](../supabase/migrations/202610070004_test_pilot.sql): preparación, cinco boletas, activación anticipada y cierre.
+3. [004_test_pilot.sql](../supabase/migrations/202610070004_test_pilot.sql): preparación, cinco boletas y cierre.
+4. [005_enforce_receipt_wait.sql](../supabase/migrations/202610070005_enforce_receipt_wait.sql): elimina el atajo de activación anticipada. Las coronas de boletas esperan 24 horas desde el canje del código, también en pruebas.
 
 No vuelvas a ejecutar la migración inicial 001. Los nuevos porcentajes se aplican a compras posteriores, sin recalcular movimientos antiguos.
 
@@ -71,13 +72,13 @@ El beneficio se acumula como coronas: **1 corona = $1 CLP** de descuento posteri
 3. Envía 1.000 coronas de Martín a Luis. Si partían con las cargas iniciales, quedan 4.000 y 4.000.
 4. Activa **Avisar a mis amigos cuando abra una carta** en Perfil de Martín. En Locales abre la carta del local de pruebas. Luis debe recibir el aviso dentro de la app. Filtrar/seleccionar comuna no avisa. Desde Luis puedes silenciar a Martín; respeta el antispam de 15 minutos y dos horas para repetir local.
 5. En Coronas, Martín crea una ficha de 1.000 para el local virtual. Se reserva ese saldo. Si no vas a usarla, cancélala y comprueba la devolución.
-6. En `/pruebas`, Martín introduce `PRUEBA-60000` y, opcionalmente, su ficha. Canjear valida la ficha como caja, genera la compra y acredita las coronas pendientes.
-7. Pulsa **Activar mis coronas de prueba** para adelantar exclusivamente las coronas de estas cinco boletas. Las compras normales siguen con 24 horas de espera.
+6. En **Coronas → Ingresa tu boleta**, justo debajo del saldo, Martín introduce `PRUEBA-60000` y, opcionalmente, su ficha. Canjear valida la ficha como caja, genera la compra y acredita las coronas pendientes.
+7. Comprueba que las coronas de esa boleta están **por activar**, sin incrementar el saldo disponible. Espera 24 horas desde el canje del código: al consultar el saldo después de ese plazo, se acreditan automáticamente. No existe botón para adelantar ese plazo.
 8. Envía las coronas activadas a tu amigo y consulta los movimientos en ambos usuarios.
 9. En `/caja`, como administrador, selecciona el local virtual y anula `PRUEBA-60000`. Comprueba reversión y devolución de la ficha vinculada. Repetir la anulación no duplica la devolución. Si las coronas ya se gastaron, se registra deuda a cubrir con futuras cargas.
 10. Canjea las restantes para probar cambios de rango y saldos. Una ficha de descuento por día sigue vigente: cancelar una reserva permite otra; usarla consume el canje diario. Puedes canjear boletas sin ficha adicional ese día.
 
-Para terminar, usa **Cerrar la prueba** en `/pruebas`: bloquea los códigos y la activación anticipada, oculta el local virtual y devuelve reservas pendientes. **Conserva saldos, rangos y movimientos**. No borra datos ni revierte compras automáticamente. No hay botón para reabrir/recrear la prueba y recargar indefinidamente.
+Para terminar, usa **Cerrar la prueba** en `/pruebas`: bloquea nuevos canjes de los códigos, oculta el local virtual y devuelve reservas pendientes. **Conserva saldos, rangos y movimientos**. No borra datos ni revierte compras automáticamente. No hay botón para reabrir/recrear la prueba y recargar indefinidamente.
 
 ## Qué se ha validado
 
