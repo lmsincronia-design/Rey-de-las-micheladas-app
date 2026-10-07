@@ -6,9 +6,14 @@ Orden recomendado: proyecto Supabase → migración → variables de Vercel → 
 
 Crea un proyecto dedicado al Club (o usa uno nuevo sin tablas de otro producto). Guarda la contraseña de la base en tu gestor de contraseñas.
 
-En **SQL Editor**, ejecuta el archivo completo:
+En **SQL Editor**, ejecuta completos, en este orden:
 
-`supabase/migrations/202610070001_club.sql`
+1. `supabase/migrations/202610070001_club.sql`
+2. `supabase/migrations/202610070002_admin_credits.sql`
+3. `supabase/migrations/202610070003_tier_rates.sql`
+4. `supabase/migrations/202610070004_test_pilot.sql`
+
+Si ya aplicaste la primera migración, ejecuta **solo las pendientes, desde la segunda**. Incluyen acreditaciones manuales, nuevos porcentajes y boletas ficticias de prueba.
 
 Es una migración inicial que se aplica **una vez**, no un script para volver a ejecutar sobre tablas existentes. Incluye trigger de registro, wallets, ledger, amistades, notificaciones, locales, fichas y permisos. Un registro con RUT/edad inválidos falla también en el servidor, aunque se eluda la validación web.
 
@@ -47,8 +52,8 @@ La web ya incluye rutas SPA y la función `/api/pos`. La API de caja retorna 503
 
 Cuando conozcas la URL estable de Vercel, en **Supabase → Authentication → URL Configuration**:
 
-- Site URL: `https://TU-APP.vercel.app` (o el dominio definitivo).
-- Redirect URLs: `https://TU-APP.vercel.app/entrar` y `https://TU-APP.vercel.app/recuperar`.
+- Site URL: `https://rey-de-las-micheladas-app.vercel.app` (o el dominio definitivo).
+- Redirect URLs: `https://rey-de-las-micheladas-app.vercel.app/entrar` y `https://rey-de-las-micheladas-app.vercel.app/recuperar`.
 - Para desarrollo: `http://localhost:5173/entrar` y `http://localhost:5173/recuperar`.
 
 Agrega las URLs de Preview concretas cuando las uses; evita permitir todos los dominios. Los enlaces de recuperación se abren en `/recuperar`, con la sesión de recuperación gestionada por Supabase. Prueba los enlaces en el mismo navegador desde el que se solicitaron: el cliente utiliza PKCE.
@@ -67,6 +72,19 @@ values ('REEMPLAZAR-POR-TU-USER-UID'::uuid, 'admin');
 No uses `user_metadata` para conceder permisos: el usuario puede modificar sus metadatos; la app solo confía en `public.staff`, que no permite escrituras desde el navegador.
 
 Vuelve a iniciar sesión y abre `/admin` (también aparece el enlace “Panel del equipo” en Perfil).
+
+## Prueba inmediata de coronas entre amigos
+
+Para preparar las cuentas de Martín/Luis y las cinco boletas ficticias, sigue [el recorrido completo de pruebas](PRUEBA-MARTIN-LUIS.md).
+
+Con la segunda migración aplicada y tu cuenta como administrador:
+
+1. Abre `/admin` → **Acreditar coronas**. Copia tu código desde `/codigo` o elige un socio del campo de código.
+2. Acredita 5.000 coronas con motivo «Prueba de envío entre amigos» y confirma el destinatario. Aparecen disponibles de inmediato. Cada carga registra administrador, destinatario, monto y motivo; puedes consultar las últimas 50.
+3. Tu amigo se registra y confirma su correo. En `/amigos`, uno comparte su QR/código y el otro envía la solicitud. El destinatario debe aceptarla.
+4. Envía 2.000 coronas desde **Amigos → Enviar**. Si ambos partieron en cero y no tenían deuda, quedan 3.000 para ti y 2.000 para tu amigo. Cada corona equivale a $1 CLP de descuento.
+
+Las acreditaciones son saldo utilizable en este proyecto, quedan en el libro de movimientos y no aumentan el rango. No es dinero ficticio separado: carga solo el monto que quieras habilitar. El tope es 20.000 por acreditación. Si existe deuda por una boleta anulada, la carga la cubre primero. Solo los administradores pueden acreditar; un cajero o socio no puede concederse saldo.
 
 ## 5. Cinco locales reales
 
@@ -119,6 +137,7 @@ Usa dos cuentas de prueba con correos que controlas. Verifica en el Supabase rea
 - QR/código → solicitud → aceptación de amistad.
 - Compartir actividad activado: abrir carta avisa; cambiar comuna no. Silenciar a un amigo impide sus futuros avisos de actividad; no impide recibir coronas.
 - Boleta de prueba emitida desde una cuenta de caja. Saldo pendiente hasta 24 horas y rango por consumo. No acelera el saldo en producción.
+- Acreditación manual del administrador y transferencia inmediata; cuenta común y caja no pueden acreditar.
 - Transferencia después de la activación: débito/crédito exactos, sin duplicar un reintento.
 - Ficha, confirmación, cancelación, vencimiento y anulación de boleta con devolución del descuento vinculado.
 - Realtime y fallback de notificaciones con dos navegadores. No existe push con la app cerrada.

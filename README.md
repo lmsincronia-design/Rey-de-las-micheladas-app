@@ -28,6 +28,10 @@ Sigue [la guía de Supabase y Vercel](docs/CONEXION-SUPABASE-VERCEL.md). Incluye
 - `VITE_SUPABASE_ANON_KEY`: clave **publishable** o `anon` (pública; protegida por RLS).
 - Las claves **secret/service_role** y llaves de caja jamás llevan prefijo `VITE_`, nunca van en Git y no se envían al navegador.
 
+## Probar con Martín y Luis
+
+[Guía de carga SQL, cinco boletas y recorrido completo](docs/PRUEBA-MARTIN-LUIS.md). Incluye una boleta de $60.000, 5.000 coronas para Martín y 3.000 para Luis, sin duplicar al repetir. Requiere cuentas existentes y activar la prueba desde administración; instalar el código no modifica saldos por sí solo.
+
 ## Qué incluye esta versión
 
 - Registro con nombre, apellido, RUT con dígito verificador, celular chileno, cumpleaños, correo, contraseña y aceptación de términos. Acceso para mayores de 18 años.
@@ -37,11 +41,12 @@ Sigue [la guía de Supabase y Vercel](docs/CONEXION-SUPABASE-VERCEL.md). Incluye
 - Envíos entre amigos aceptados, con saldo disponible, idempotencia, bloqueos de filas y libro de movimientos. Tope 20.000 por envío / 50.000 por día.
 - Avisos **al abrir la carta**, con consentimiento para compartir actividad. Silencio independiente por amigo. Antispam: al menos 15 minutos entre avisos y dos horas para repetir el mismo local.
 - Notificaciones **dentro de la app**, vía Supabase Realtime y consulta periódica de respaldo. No son push con la app cerrada ni mensajes de WhatsApp.
-- Rangos del prototipo: Plebeyo, Comerciante, Guardia, Noble y Rey. Porcentajes 8/10/12/14/16 según consumo de 12 meses; las transferencias no aumentan el rango.
+- Rangos del prototipo: Plebeyo, Comerciante, Guardia Real, Noble y Rey. Porcentajes 4/6/8/10/12 según consumo de 12 meses; las transferencias no aumentan el rango.
 - Código de socio para caja. Boletas idempotentes, acreditación por persona, espera de 24 horas y tope de 8.000 coronas por persona/boleta.
 - Ficha de descuento de 10 minutos, reserva y devolución al cancelar/vencer. Hasta 20.000, mínimo 1.000, múltiplos de 500 y un canje diario.
-- Panel `/admin`: resumen, socios recientes y mantenimiento de locales/cartas verificadas.
+- Panel `/admin`: resumen, socios recientes, mantenimiento de locales/cartas verificadas y acreditaciones manuales de coronas con motivo e historial. Solo administradores, hasta 20.000 por carga, saldo inmediato sin aumentar rango. Requiere la migración `202610070002_admin_credits.sql`.
 - Panel `/caja`: consulta de socios, aplicación de fichas, registro y anulación de boletas. Solo cuentas con permiso, limitado al local correspondiente.
+- Pantalla `/pruebas`: piloto autorizado por administrador para dos cuentas, cinco boletas ficticias de un uso, local virtual restringido, activación anticipada solo de esas boletas y cierre con auditoría conservada.
 - API `/api/pos` para integración externa, con llave independiente por local y credenciales guardadas en el servidor.
 
 ## Estado y límites concretos
