@@ -1,0 +1,23 @@
+{
+  "name": "club-del-rey",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Club del Rey (El Rey de las Micheladas): app web de fidelización por rangos y coronas",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "test": "node --test test/*.test.js",
+    "e2e": "node test/e2e.mjs",
+    "worker": "wrangler dev --local",
+    "e2e:mvp": "node test/e2e-mvp.mjs",
+    "test:todo": "node --test test/*.test.js && node test/e2e.mjs && node test/e2e-mvp.mjs"
+  },
+  "devDependencies": {
+    "qrcode-generator": "^2.0.4",
+    "wrangler": "^4.148.0",
+    "playwright": "^1.61.1"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+<defs>
+<g id="l" fill="none" stroke="#f7b22a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+<circle r="26"/><circle r="20" stroke-width="1.4"/>
+<path d="M0 0V-20M0 0V20M0 0H-20M0 0H20M0 0L-14 -14M0 0L14 -14M0 0L-14 14M0 0L14 14" stroke-width="1.4"/>
+</g>
+<g id="g" fill="none" stroke="#f7b22a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M-24 0A24 24 0 0 1 24 0Z"/><path d="M-17 0A17 17 0 0 1 17 0" stroke-width="1.2"/><path d="M0 0V-17M0 0L-12 -12M0 0L12 -12" stroke-width="1.2"/>
+</g>
+</defs>
+<use href="#l" transform="translate(40 38) rotate(12)"/>
+<use href="#g" transform="translate(150 30) rotate(-24)"/>
+<use href="#l" transform="translate(205 118) rotate(40) scale(.8)"/>
+<use href="#g" transform="translate(78 120) rotate(150)"/>
+<use href="#l" transform="translate(130 200) rotate(-8)"/>
+<use href="#g" transform="translate(20 195) rotate(70) scale(.85)"/>
+</svg>

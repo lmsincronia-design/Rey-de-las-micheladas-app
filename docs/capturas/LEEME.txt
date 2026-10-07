@@ -1,0 +1,2 @@
+Capturas reales de la app (versión celular y pantallas de caja/administración), tomadas por las pruebas automáticas.
+Para regenerarlas todas: cd club-app && npm install && npx playwright install chromium && npm run e2e:mvp

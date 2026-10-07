@@ -1,0 +1,21 @@
+// Club del Rey en Cloudflare: Worker (API) + D1 (base de datos) + archivos estáticos (/public).
+// Pasos de publicación: ver README.md.
+{
+  "name": "club-del-rey",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-13",
+  "d1_databases": [
+    { "binding": "DB", "database_name": "club-del-rey", "database_id": "REEMPLAZAR-CON-EL-ID-DE-TU-BASE", "migrations_dir": "migrations" }
+  ],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/m/*", "/"]
+  },
+  // Secretos (no van aquí): npx wrangler secret put SECRET / ADMIN_PASSWORD
+  // MODO_DEMO "1" muestra el código de verificación en pantalla y habilita la caja de prueba. En producción: "0".
+  // MODO_MVP "1" activa los códigos de prueba y quita las esperas (24 h) para mostrar todo en vivo. En producción: "0".
+  "vars": { "MODO_DEMO": "1", "MODO_MVP": "1" },
+  "triggers": { "crons": ["30 7 * * *"] }
+}

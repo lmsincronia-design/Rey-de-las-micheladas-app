@@ -1,0 +1,3 @@
+# Copia este archivo como .dev.vars para usar "npx wrangler dev --local" (valores de desarrollo, NO usar en producción)
+SECRET=secreto-local-wrangler
+ADMIN_PASSWORD=admin-wrangler
