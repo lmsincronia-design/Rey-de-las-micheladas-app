@@ -235,3 +235,82 @@ test('closing the pilot releases reservations and disables claims without silent
  assert.equal((await db.query('select status from redemptions where id=$1',[ficha.id])).rows[0].status,'expired');
  await db.exec('set role authenticated');assert.equal((await db.query('select id from locations where id=$1',[p.location_id])).rows.length,0);await db.exec('reset role');
 });
+
+const diners=Array.from({length:6},(_,i)=>`80000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`);
+let groupCheckout,groupReceipt,groupToken;
+function fixtureRut(body){let sum=0,factor=2;for(const digit of [...body].reverse()){sum+=Number(digit)*factor;factor=factor===7?2:factor+1;}const n=11-sum%11;return body+(n===11?'0':n===10?'K':n);}
+test('table codes fix party size, require login and cannot be edited directly',async()=>{
+ for(let i=0;i<diners.length;i++){
+  if(i===1)continue; // This guest signs up only after the payer has registered the receipt.
+  await db.query('insert into auth.users values($1,$2)',[diners[i],JSON.stringify({first_name:'Invitado '+i,last_name:'Prueba',rut:fixtureRut(String(30000000+i)),phone:'+56912345678',birthday:'1990-01-01',terms:true})]);
+  const spending=[50000,0,150000,350000,700000,0][i];
+  if(spending)await db.query("insert into ledger(user_id,kind,amount,spending,note) values($1,'purchase',0,$2,'Prior consumption fixture')",[diners[i],spending]);
+ }
+ await uid(null);await rejected(()=>call('prepare_table',[5,crypto.randomUUID()]),/Inicia sesión/);
+ await uid(diners[0]);for(const count of [null,0,21])await rejected(()=>call('prepare_table',[count,crypto.randomUUID()]),/entre 1 y 20/);
+ const request=crypto.randomUUID();groupCheckout=await call('prepare_table',[5,request]);
+ assert.equal(groupCheckout.people,5);assert.equal((await call('prepare_table',[5,request])).code,groupCheckout.code);
+ await rejected(()=>call('prepare_table',[4,request]),/Solicitud ya utilizada/);
+ await uid(diners[1]);await rejected(()=>call('prepare_table',[5,request]),/Solicitud ya utilizada/);
+ await db.exec('set role authenticated');await rejected(()=>db.query('update table_checkouts set people=1'),/permission denied/);
+ assert.equal((await call('my_table_checkouts')).length,0);await db.exec('reset role');
+});
+test('cashier registers 100000 / 5, payer earns only their share, and exposes four guest slots',async()=>{
+ await uid(luis);const lookup=await call('staff_member',[local,groupCheckout.code]);assert.equal(lookup.people,5);
+ await rejected(()=>call('staff_sale',[local,'group-100k',100000,4,[groupCheckout.code]]),/cantidad de personas/);
+ groupReceipt=await call('staff_sale',[local,'group-100k',100000,5,[groupCheckout.code]]);
+ const entries=(await db.query("select * from ledger where receipt_id=$1 and kind='purchase'",[groupReceipt])).rows;
+ assert.equal(entries.length,1);assert.equal(entries[0].user_id,diners[0]);assert.equal(entries[0].amount,1200);assert.equal(entries[0].spending,20000);assert.equal(entries[0].settled,false);
+ await uid(diners[0]);const tables=await call('my_receipt_tables');assert.equal(tables.length,1);assert.equal(tables[0].part,20000);assert.equal(tables[0].claimed,1);groupToken=tables[0].token;
+ assert.equal((await call('my_wallet')).balance,0);assert.equal((await call('my_wallet')).pending,1200);
+ const own=await call('claim_table_share',[groupToken]);assert.equal(own.already_claimed,true);assert.equal(own.earned,1200);
+ await uid(null);await db.exec('set role anon');const preview=await call('table_share_info',[groupToken]);assert.equal(preview.remaining,4);assert.equal(preview.part,20000);assert.equal(preview.earned,null);assert.ok(!JSON.stringify(preview).includes(diners[0]));
+ await rejected(()=>call('claim_table_share',[groupToken]),/permission denied/);await rejected(()=>db.query('select * from receipt_tables'),/permission denied/);await db.exec('reset role');
+});
+test('each guest claims once at their own rate, including a new Plebeyo, with 24-hour waiting periods',async()=>{
+ await db.query('insert into auth.users values($1,$2)',[diners[1],JSON.stringify({first_name:'Invitado nuevo',last_name:'Prueba',rut:fixtureRut('30000001'),phone:'+56912345678',birthday:'1990-01-01',terms:true})]);
+ const expected=[800,1600,2000,2400];
+ for(let i=1;i<=4;i++){
+  await uid(diners[i]);await db.exec('set role authenticated');
+  const claim=await call('claim_table_share',[groupToken]);assert.equal(claim.earned,expected[i-1]);assert.equal(claim.part,20000);assert.equal(claim.already_claimed,false);
+  assert.equal((await call('claim_table_share',[groupToken])).already_claimed,true);
+  assert.equal((await call('my_wallet')).balance,0);assert.equal((await call('my_wallet')).pending,expected[i-1]);
+  assert.equal((await call('my_receipt_tables')).length,0);await db.exec('reset role');
+ }
+ const rows=(await db.query("select user_id,spending,extract(epoch from (available_at-created_at))::int as delay from ledger where receipt_id=$1 and kind='purchase'",[groupReceipt])).rows;
+ assert.equal(rows.length,5);assert.equal(rows.reduce((sum,r)=>sum+r.spending,0),100000);assert.ok(rows.every(r=>r.delay===86400));
+ await uid(diners[5]);await rejected(()=>call('claim_table_share',[groupToken]),/todos los cupos/);
+ // A POS retry after late claims must still be idempotent, not reject the added recipients.
+ assert.equal(await call('pos_record_sale',[local,'group-100k',100000,5,[groupCheckout.code]]),groupReceipt);
+ await rejected(()=>call('pos_record_sale',[local,'other-folio',100000,5,[groupCheckout.code]]),/otra boleta/);
+ await rejected(()=>call('pos_record_sale',[local,'group-100k',100001,5,[groupCheckout.code]]),/otra boleta/);
+});
+test('cancelling a shared receipt reverses all participants exactly once and blocks further claims',async()=>{
+ await call('pos_cancel_sale',[local,'group-100k']);await call('pos_cancel_sale',[local,'group-100k']);
+ for(const id of diners.slice(0,5)){await uid(id);assert.equal((await call('my_wallet')).pending,0);await rejected(()=>call('claim_table_share',[groupToken]),/Boleta anulada/);}
+ assert.equal((await db.query("select count(*)::int n from ledger where receipt_id=$1 and kind='reversal'",[groupReceipt])).rows[0].n,5);
+});
+test('expired table codes/links and direct access to internal POS helpers are rejected',async()=>{
+ await uid(diners[0]);const checkout=await call('prepare_table',[2,crypto.randomUUID()]);
+ await db.query("update table_checkouts set expires_at=now()-interval '1 second' where id=$1",[checkout.id]);
+ await rejected(()=>call('pos_record_sale',[local,'expired-table',10000,2,[checkout.code]]),/vencido/);
+ const fresh=await call('prepare_table',[2,crypto.randomUUID()]);const receipt=await call('pos_record_sale',[local,'expired-link',10000,2,[fresh.code]]);
+ await db.query("update receipt_tables set expires_at=now()-interval '1 second' where receipt_id=$1",[receipt]);
+ const token=(await db.query('select token from receipt_tables where receipt_id=$1',[receipt])).rows[0].token;
+ await uid(diners[1]);await rejected(()=>call('claim_table_share',[token]),/venció/);
+ await db.exec('set role authenticated');await rejected(()=>call('pos_record_sale_direct',[local,'bypass',10000,1,[]]),/permission denied/);
+ await rejected(()=>call('pos_member_direct',['ANYCODE']),/permission denied/);await db.exec('reset role');
+});
+test('test receipt uses the same party calculation and returns a usable share link',async()=>{
+ await db.exec('begin');
+ try{
+  await db.exec('update test_pilot set active=true;update locations set active=true where is_test');
+  await db.query('insert into test_vouchers(code,amount) values($1,$2)',['PRUEBA-MESA-100000',100000]);
+  await uid(martin);const checkout=await call('prepare_table',[5,crypto.randomUUID()]);
+  await uid(luis);await db.exec('savepoint wrong_owner');await rejected(()=>call('claim_test_receipt',['PRUEBA-MESA-100000',null,checkout.code]),/no pertenece/);await db.exec('rollback to savepoint wrong_owner');
+  await uid(martin);const before=await call('my_wallet');const result=await call('claim_test_receipt',['PRUEBA-MESA-100000',null,checkout.code]);assert.equal(result.earned,20000*before.pct/100);
+  assert.equal((await call('claim_test_receipt',['PRUEBA-MESA-100000',null,checkout.code])).already_claimed,true);
+  const table=(await call('my_receipt_tables')).find(t=>t.folio==='PRUEBA-MESA-100000');assert.equal(table.people,5);assert.equal(table.part,20000);assert.equal(table.claimed,1);
+  await uid(luis);await call('admin_close_test_pilot');assert.equal((await call('table_share_info',[table.token])).expired,true);
+ }finally{await db.exec('rollback');}
+});

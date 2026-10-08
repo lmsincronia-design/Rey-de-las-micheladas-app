@@ -32,6 +32,10 @@ Sigue [la guía de Supabase y Vercel](docs/CONEXION-SUPABASE-VERCEL.md). Incluye
 
 [Guía de carga SQL, cinco boletas y recorrido completo](docs/PRUEBA-MARTIN-LUIS.md). Incluye una boleta de $60.000, 5.000 coronas para Martín y 3.000 para Luis, sin duplicar al repetir. Requiere cuentas existentes y activar la prueba desde administración; instalar el código no modifica saldos por sí solo.
 
+## Mesas compartidas
+
+[Guía de reparto, caja e invitados nuevos](docs/MESAS-COMPARTIDAS.md). Una mesa de $100.000 entre cinco acredita a cada persona sobre $20.000 según su rango. El pagador comparte un enlace con cuatro cupos; el invitado puede registrarse y reclamar después. Requiere la migración 006.
+
 ## Qué incluye esta versión
 
 - Registro con nombre, apellido, RUT con dígito verificador, celular chileno, cumpleaños, correo, contraseña y aceptación de términos. Acceso para mayores de 18 años.
@@ -42,6 +46,8 @@ Sigue [la guía de Supabase y Vercel](docs/CONEXION-SUPABASE-VERCEL.md). Incluye
 - Avisos **al abrir la carta**, con consentimiento para compartir actividad. Silencio independiente por amigo. Antispam: al menos 15 minutos entre avisos y dos horas para repetir el mismo local.
 - Notificaciones **dentro de la app**, vía Supabase Realtime y consulta periódica de respaldo. No son push con la app cerrada ni mensajes de WhatsApp.
 - Rangos del prototipo: Plebeyo, Comerciante, Guardia Real, Noble y Rey. Porcentajes 4/6/8/10/12 según consumo de 12 meses; las transferencias no aumentan el rango.
+- Código de socio y código de mesa con cantidad de personas. Enlaces con cupos para que los acompañantes reclamen su parte, conservados durante registro y confirmación de correo.
+- Rangos con distintivos y barra de progreso permanente en la cabecera para usuarios conectados.
 - Código de socio para caja. Boletas idempotentes, acreditación por persona, espera de 24 horas y tope de 8.000 coronas por persona/boleta.
 - Ficha de descuento de 10 minutos, reserva y devolución al cancelar/vencer. Hasta 20.000, mínimo 1.000, múltiplos de 500 y un canje diario.
 - Panel `/admin`: resumen, socios recientes, mantenimiento de locales/cartas verificadas y acreditaciones manuales de coronas con motivo e historial. Solo administradores, hasta 20.000 por carga, saldo inmediato sin aumentar rango. Requiere la migración `202610070002_admin_credits.sql`.
@@ -56,7 +62,7 @@ El enlace `https://qrfy.io/p/oOBx-dlqTy` devolvió un bloqueo de red durante el 
 
 El código y la migración están preparados; se requiere aplicar la migración a un proyecto Supabase y probar el correo, las cuentas, Realtime y los canjes allí. El build de Vercel necesita las dos variables públicas configuradas antes de compilar.
 
-Los beneficios de cumpleaños, reclamos tardíos por enlace de mesa, importación CSV, vencimiento por inactividad y edición de reglas del panel original se conservan en `original/club-app/`, pero **todavía no están migrados al backend Supabase**. El cumpleaños ya se captura en el registro. Las reglas de negocio de la versión nueva están en la migración y deben aprobarse comercialmente antes de un piloto.
+Los beneficios de cumpleaños, importación CSV, vencimiento por inactividad y edición de reglas del panel original se conservan en `original/club-app/`, pero **todavía no están migrados al backend Supabase**. Los reclamos por enlace de mesa ya están implementados en el backend Supabase mediante la migración 006. El cumpleaños ya se captura en el registro. Las reglas de negocio de la versión nueva están en la migración y deben aprobarse comercialmente antes de un piloto.
 
 Los términos son una base de trabajo: completar responsable/contacto de datos, conservación, revisión legal y derechos antes de aceptar clientes reales. Confirmar derechos sobre fotos y marca suministradas en el ZIP.
 

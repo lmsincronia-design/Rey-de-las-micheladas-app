@@ -13,6 +13,7 @@ En **SQL Editor**, ejecuta completos, en este orden:
 3. `supabase/migrations/202610070003_tier_rates.sql`
 4. `supabase/migrations/202610070004_test_pilot.sql`
 5. `supabase/migrations/202610070005_enforce_receipt_wait.sql`
+6. `supabase/migrations/202610070006_table_shares.sql`
 
 Si ya aplicaste la primera migración, ejecuta **solo las pendientes, desde la segunda**. Incluyen acreditaciones manuales, nuevos porcentajes y boletas ficticias de prueba.
 
@@ -146,3 +147,7 @@ Usa dos cuentas de prueba con correos que controlas. Verifica en el Supabase rea
 La migración y UI tienen pruebas locales; estas comprobaciones remotas siguen pendientes hasta conectar tus cuentas. Los endpoints Realtime y correo son del proyecto real, no del simulador de pruebas.
 
 Antes de recibir clientes reales: validar márgenes/porcentajes/topes con el Rey, conectar el POS real, completar términos y contacto de privacidad, aprobar las imágenes de marca y definir las funciones del original que se migrarán en la siguiente etapa.
+
+## Reparto por mesa y acompañantes sin cuenta
+
+Sigue [Mesas compartidas](MESAS-COMPARTIDAS.md) para el código de mesa, caja y reclamo por enlace después de registrarse. La migración 006 no requiere nuevas claves ni redirecciones de Auth.

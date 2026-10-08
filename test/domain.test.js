@@ -11,3 +11,11 @@ test('normalizes local mobile numbers',()=>{assert.equal(normalizePhone('9 1234 
 test('menu URLs cannot execute scripts or embed credentials',()=>{assert.equal(safeMenuUrl('javascript:alert(1)'),null);assert.equal(safeMenuUrl('https://user:password@example.com'),null);assert.equal(safeMenuUrl('https://qrfy.io/p/oOBx-dlqTy'),'https://qrfy.io/p/oOBx-dlqTy');});
 test('location sorting handles absent coordinates',()=>{assert.equal(distanceKm({latitude:0,longitude:0},{latitude:0,longitude:0}),0);assert.equal(distanceKm({latitude:0,longitude:0},{}),Infinity);});
 test('escapes personal names before inserting HTML',()=>{assert.equal(esc('<img onerror="alert(1)">'),'&lt;img onerror=&quot;alert(1)&quot;&gt;');});
+
+test('rank progress uses the current tier interval and caps Rey at 100%',async()=>{
+ const {rankProgress}=await import('../src/ranks.js');
+ assert.equal(rankProgress(0).tier.name,'Plebeyo');assert.equal(rankProgress(25000).percent,50);
+ const merchant=rankProgress(60000);assert.equal(merchant.tier.name,'Comerciante');assert.equal(merchant.percent,10);assert.equal(merchant.remaining,90000);
+ assert.equal(rankProgress(150000).tier.name,'Guardia Real');assert.equal(rankProgress(150000).percent,0);
+ assert.equal(rankProgress(700000).percent,100);assert.equal(rankProgress(900000).next,undefined);
+});

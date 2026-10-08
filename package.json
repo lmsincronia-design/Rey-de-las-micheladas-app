@@ -12,7 +12,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test test/*.test.js",
     "test:original": "cd original/club-app && npm test",
-    "test:e2e": "node test/browser.mjs"
+    "test:e2e": "node test/browser.mjs && node test/browser-tables.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",

@@ -55,9 +55,23 @@ El cliente ya reservó esa ficha en su app y eligió el local. Devuelve monto y 
 
 `redemption_code` es opcional si no hubo descuento. Si hubo descuento, envíalo para vincular la ficha y devolverlo al anular. La ficha debe pertenecer a un socio incluido en la boleta y al mismo local; solo se vincula a una boleta.
 
-Hasta ocho códigos únicos de socios, y nunca más códigos que comensales. Se acredita a los socios que dieron su código; todavía no hay reclamo posterior de los lugares sin código en Supabase. Mismo local+folio+datos → mismo resultado; datos contradictorios → error. Los importes son pesos enteros. Cuenta dividida en partes iguales (redondeo hacia abajo), porcentaje según rango previo a la visita, tope 8.000/persona, disponibles en 24 horas.
+Hasta ocho códigos únicos de socios, y nunca más códigos que comensales. En ese modo se acredita a los socios que dieron su código. Para que los acompañantes reclamen después, usa el modo de código de mesa que se describe abajo. Mismo local+folio+datos → mismo resultado; datos contradictorios → error. Los importes son pesos enteros. Cuenta dividida en partes iguales (redondeo hacia abajo), porcentaje según rango previo a la visita, tope 8.000/persona, disponibles en 24 horas.
 
 Registra una venta de prueba solo cuando el operador la autorice; una llamada de acreditación agrega coronas reales a esta base. No existe un endpoint público para inventar saldo.
+
+## Mesa con reclamo posterior por enlace
+
+El pagador prepara un código de mesa en `/codigo`, por ejemplo `M123456789AB`, con la cantidad de personas. Consulta `member` con ese código: además de los datos habituales devuelve `table_code` y `people`. Confirma la cantidad con la mesa.
+
+Registra la venta con **un solo código de mesa**, conservando la cantidad devuelta:
+
+```json
+{"local_id":"UUID-LOCAL","action":"sale","folio":"MESA-100000-01","amount":100000,"people":5,"codes":["M123456789AB"]}
+```
+
+El código anterior es ilustrativo: usa el generado en la app. Caja aporta el monto real pagado. La función acredita al pagador su parte ($20.000), guarda el total y crea cuatro cupos de invitación. El pagador obtiene el enlace desde Coronas; no es necesario que el POS lo envíe. Los invitados reciben su propio porcentaje al reclamar. Los reintentos usan el mismo folio/código/datos incluso después de que otros hayan reclamado. El código no se puede reutilizar en otra boleta ni cambiar su cantidad de personas.
+
+Ver [Mesas compartidas](MESAS-COMPARTIDAS.md) para el flujo completo y los vencimientos.
 
 ## Anular
 

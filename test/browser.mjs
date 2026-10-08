@@ -36,6 +36,7 @@ try{
  else if(path.endsWith('/admin_members'))data=[{member_code:'ABCDEF123456',first_name:'Martín',last_name:'Soto',balance},{member_code:'123456ABCDEF',first_name:'Luis',last_name:'Soto',balance:3000}];
  else if(path.endsWith('/admin_credit_crowns')){balance+=body.amount_value;credits.push({id:body.request_id,member_code:body.code_value,member_name:'Martín S.',admin_name:'Martín S.',amount:body.amount_value,reason:body.reason_value,created_at:new Date().toISOString()});data={id:body.request_id,amount:body.amount_value,balance,already_applied:false};}
  else if(path.endsWith('/admin_credit_history'))data=credits;
+ else if(path.endsWith('/my_table_checkouts')||path.endsWith('/my_receipt_tables'))data=[];
  else if(path.endsWith('/my_test_pilot'))data=pilot||{enabled:false,is_admin:isAdmin};
  else if(path.endsWith('/admin_prepare_test_pilot')){balance+=5000;pilot={enabled:true,configured:true,is_admin:true,participant:true,martin_code:body.martin_code,luis_code:body.luis_code,location_id:local.id,vouchers:[15000,30000,60000,90000,120000].map(amount=>({code:'PRUEBA-'+amount,amount,claimed:false}))};data=pilot;}
  else if(path.endsWith('/claim_test_receipt')){const v=pilot.vouchers.find(v=>v.code===body.code_value);if(!v){await route.fulfill({status:400,contentType:'application/json',body:JSON.stringify({message:'Código de boleta de prueba no encontrado'})});return;}data={amount:v.amount,earned:2400,already_claimed:v.claimed};if(!v.claimed)pending+=2400;v.claimed=true;v.member_name='Martín';}
