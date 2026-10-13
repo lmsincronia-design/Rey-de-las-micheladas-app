@@ -19,3 +19,16 @@ test('rank progress uses the current tier interval and caps Rey at 100%',async()
  assert.equal(rankProgress(150000).tier.name,'Guardia Real');assert.equal(rankProgress(150000).percent,0);
  assert.equal(rankProgress(700000).percent,100);assert.equal(rankProgress(900000).next,undefined);
 });
+
+test('los enlaces compartidos nunca apuntan a localhost ni a la red local',async()=>{
+  const {publicOrigin,PRODUCTION_URL}=await import('../src/domain.js');
+  const at=(hostname,origin=`https://${hostname}`)=>({hostname,origin});
+  assert.equal(publicOrigin(at('localhost','http://localhost:5173'),undefined),PRODUCTION_URL);
+  assert.equal(publicOrigin(at('127.0.0.1','http://127.0.0.1:4175'),undefined),PRODUCTION_URL);
+  assert.equal(publicOrigin(at('192.168.1.40','http://192.168.1.40:5173'),undefined),PRODUCTION_URL);
+  assert.equal(publicOrigin(at('10.0.0.5','http://10.0.0.5:5173'),undefined),PRODUCTION_URL);
+  assert.equal(publicOrigin(at('localhost','http://localhost:5173'),'https://club.example.cl/'),'https://club.example.cl');
+  assert.equal(publicOrigin(at('localhost','http://localhost:5173'),'http://evil.test'),PRODUCTION_URL,'solo HTTPS');
+  assert.equal(publicOrigin(at('rey-de-las-micheladas-app.vercel.app'),undefined),'https://rey-de-las-micheladas-app.vercel.app');
+  assert.equal(publicOrigin(at('club.example.cl'),'https://otro.test'),'https://club.example.cl','en un dominio público manda el dominio real');
+});

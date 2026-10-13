@@ -38,3 +38,14 @@ export function distanceKm(a,b) {
   const h=Math.sin(dlat/2)**2+Math.cos(rad(a.latitude))*Math.cos(rad(b.latitude))*Math.sin(dlon/2)**2;
   return 6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
 }
+
+// Dirección pública del Club. Los enlaces que se comparten (WhatsApp, mesas, invitaciones) NO pueden apuntar a
+// localhost ni a una IP de red local: quien los recibe no los puede abrir. En desarrollo se usa VITE_PUBLIC_URL o la de producción.
+export const PRODUCTION_URL='https://rey-de-las-micheladas-app.vercel.app';
+export function publicOrigin(loc=globalThis.location,configured=import.meta.env?.VITE_PUBLIC_URL){
+  const host=String(loc?.hostname||'');
+  const isLocal=/^(localhost|0\.0\.0\.0|\[::1\]|::1)$/i.test(host)||/\.localhost$/i.test(host)||/^127\.\d+\.\d+\.\d+$/.test(host)||/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
+  if(!isLocal)return loc.origin;
+  const url=String(configured||'').trim().replace(/\/+$/,'');
+  return /^https:\/\/[^/@\s]+$/.test(url)?url:PRODUCTION_URL;
+}

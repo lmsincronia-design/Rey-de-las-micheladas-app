@@ -1,5 +1,5 @@
 import {rpc,authAction} from './api.js';
-import {esc,money} from './domain.js';
+import {esc,money,publicOrigin} from './domain.js';
 const tokenPattern=/^[a-f0-9]{32}$/;
 export function rememberTableInvite(){
  const query=new URLSearchParams(location.search);
@@ -39,7 +39,7 @@ export function receiptTablesPanel(receipts=[]){
 }
 export function bindTableShares({run,toast}){
  document.querySelectorAll('[data-copy-table],[data-share-table]').forEach(b=>b.onclick=()=>run(b,async()=>{
-  const token=b.dataset.copyTable||b.dataset.shareTable;const url=`${location.origin}/mesa?codigo=${token}`;
+  const token=b.dataset.copyTable||b.dataset.shareTable;const url=`${publicOrigin()}/mesa?codigo=${token}`;
   if(b.dataset.shareTable&&navigator.share){try{await navigator.share({title:'Tu parte de la junta 👑',text:'Recibe las coronas de tu parte de la mesa. Si aún no tienes cuenta, puedes crearla desde el enlace.',url});}catch(e){if(e.name!=='AbortError')throw e;}}
   else{await navigator.clipboard.writeText(url);toast('Enlace de tu mesa copiado.');}
  }));

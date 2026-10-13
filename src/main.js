@@ -7,7 +7,7 @@ import {testPilotPage,testMenu} from './test-pilot.js';
 import qr from 'qrcode-generator';
 import {adminCreditsPanel,bindAdminCredits} from './admin-credits.js';
 import { supabase, configured, rpc, rows, profile, authAction } from './api.js';
-import { esc, money, normalizeRut, normalizePhone, validateRegistration, safeMenuUrl, distanceKm } from './domain.js';
+import { esc, money, normalizeRut, normalizePhone, validateRegistration, safeMenuUrl, distanceKm, publicOrigin } from './domain.js';
 import { LOCALES_REY } from './locales-rey.js';
 
 const app=document.querySelector('#app');
@@ -98,7 +98,7 @@ function authPage(mode){
 }
 async function friends(){
  if(authRequired())return;
- const invitation=`${location.origin}/amigos?codigo=${encodeURIComponent(state.profile.member_code)}`;
+ const invitation=`${publicOrigin()}/amigos?codigo=${encodeURIComponent(state.profile.member_code)}`;
  shell(`${heading('LA JUNTA ES MEJOR CON AMIGOS','TU GENTE, EN EL CLUB.','Añádanse por código o QR. Ambos deben aceptar la amistad antes de enviar coronas.')}<div class="friends-layout"><section class="panel"><span class="eyebrow">TU INVITACIÓN</span><h2>Que se sume tu gente.</h2><div class="qr">${qrSvg(invitation)}</div><div class="code">${esc(state.profile.member_code)}</div><div class="actions"><button id="copy" class="btn secondary">Copiar enlace</button><button id="share-invite" class="btn">Compartir</button></div><p class="hint">Este código permite solicitar amistad; no permite gastar tus coronas.</p></section><section class="panel"><h2>Añadir un amigo</h2><form id="friend-form">${input('code','Código de tu amigo','text','maxlength="12" placeholder="Código de 12 caracteres"')}<button class="btn" type="submit">Enviar solicitud →</button><button class="btn secondary" type="button" id="scan">Escanear QR</button></form><div id="scanner"></div><div class="section-title"><h3>Mis amigos (${state.friends.filter(f=>f.status==='accepted').length})</h3></div>${state.friends.length?state.friends.map(f=>`<article class="friend"><span class="avatar">${esc(f.first_name[0])}</span><div class="friend-info"><strong>${esc(f.first_name)} ${esc(f.last_name)}</strong><small>${f.status==='accepted'?(f.muted?'Avisos de actividad silenciados':'Amigos del Club'):f.incoming?'Quiere ser tu amigo':'Solicitud enviada'}</small></div><div class="friend-actions">${f.status==='pending'&&f.incoming?`<button class="btn small" data-accept="${f.id}">Aceptar</button><button class="icon-btn" data-remove="${f.id}" aria-label="Rechazar solicitud de ${esc(f.first_name)}">✕</button>`:f.status==='accepted'?`${link(`/coronas?para=${f.other_id}`,'Enviar','btn small')}<button class="icon-btn" data-mute="${f.id}" title="${f.muted?'Activar avisos':'Silenciar actividad'}" aria-label="${f.muted?'Activar avisos de':'Silenciar a'} ${esc(f.first_name)}">${f.muted?'🔕':'🔔'}</button><button class="icon-btn" data-remove="${f.id}" aria-label="Eliminar amistad con ${esc(f.first_name)}">✕</button>`:`<button class="icon-btn" data-remove="${f.id}" aria-label="Cancelar solicitud a ${esc(f.first_name)}">✕</button>`}</div></article>`).join(''):empty('Aquí empieza la junta','Comparte tu código o añade a tu primer amigo.')}</section></div>`);
  const invite=new URLSearchParams(location.search).get('codigo');
  if(invite&&/^[A-Za-z0-9]{12}$/.test(invite)){document.querySelector('[name="code"]').value=invite;sessionStorage.removeItem('rey-invite');}
