@@ -71,6 +71,7 @@ try{
  // Ranking: chip TOP junto al rango, podio real, tu posición y activar el nombre público
  await page.goto(base+'/ranking');await page.getByRole('heading',{name:'EL TOP 10 DEL REY.'}).waitFor();
  await page.locator('.header-top').filter({hasText:'TOP 27'}).waitFor();
+ {const fit=await page.evaluate(()=>{const box=document.querySelector('.header-rank').getBoundingClientRect();return [...document.querySelectorAll('.header-rank-top > *')].map(e=>e.getBoundingClientRect().right<=box.right+0.5);});assert.ok(fit.every(Boolean),'El rango, el chip TOP y el % deben caber dentro del recuadro de la cabecera en móvil: '+fit);}
  await page.getByText('Cote M.').first().waitFor();await page.getByText('Socio anónimo').first().waitFor();
  await page.getByRole('heading',{name:/TOP 27/}).waitFor();await page.getByText('112.000').waitFor();
  assert.equal(await page.locator('.demo-banner').filter({hasText:'VISTA DE EJEMPLO'}).count(),0,'con datos reales no se muestra el banner de ejemplo');
@@ -90,15 +91,28 @@ try{
  await page.goto(base+'/coronas');await page.getByRole('heading',{name:'♛ $8.000'}).waitFor();
  await page.goto(base+'/pruebas');await page.getByRole('heading',{name:'Preparar Martín y Luis'}).waitFor();
  await page.getByLabel('Cuenta de Martín').selectOption('ABCDEF123456');await page.getByLabel('Cuenta de Luis').selectOption('123456ABCDEF');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Preparar las cinco boletas'}).click();await page.getByRole('heading',{name:'Las cinco boletas'}).waitFor();assert.equal(balance,13000);
- await page.goto(base+'/coronas');await page.getByRole('heading',{name:'Ingresa tu boleta',exact:true}).waitFor();
- const walletOrder=await page.locator('.balance-card h2,.wallet-actions h2').allTextContents();assert.deepEqual(walletOrder,['♛ $13.000','Ingresa tu boleta','Usarlas en una junta','Coronas para un amigo']);
+ await page.goto(base+'/coronas');await page.getByRole('tablist',{name:'¿Qué quieres hacer con tus coronas?'}).waitFor();
+ // Tres pasos en el orden de una visita: usar (antes de la cuenta) → sumar (después de pagar) → regalar
+ assert.deepEqual(await page.getByRole('tab').allTextContents().then(x=>x.map(s=>s.replace(/s+/g,' ').trim())),['1♛Usar mis coronasAntes de pedir la cuenta','2🧾Sumar mi compraDespués de pagar','3🎁Regalar a un amigoCuando quieras'].map(s=>s.replace(/s+/g,' ').trim()));
+ // Con saldo disponible se abre en "Usar"; "Sumar mi compra" no se ve hasta elegirlo
+ assert.equal(await page.getByRole('tab',{name:/Usar mis coronas/}).getAttribute('aria-selected'),'true');
+ assert.equal(await page.getByRole('heading',{name:'Ingresa tu boleta',exact:true}).isVisible(),false);
+ await page.getByText('Hazlo antes de pedir la cuenta.').waitFor();
+ const walletOrder=await page.locator('.balance-card h2,.wallet-actions h2').allTextContents();assert.deepEqual(walletOrder,['♛ $13.000','Usarlas en una junta','Ingresa tu boleta','Coronas para un amigo']);
+ await page.getByRole('tab',{name:/Sumar mi compra/}).click();await page.getByText('Hazlo después de pagar.').waitFor();await page.getByRole('heading',{name:'Ingresa tu boleta',exact:true}).waitFor();
+ assert.equal(await page.getByRole('heading',{name:'Usarlas en una junta',exact:true}).isVisible(),false);
+ assert.match(page.url(),/tab=sumar/);
+ await mkdir('test/artifacts',{recursive:true});await page.screenshot({path:'test/artifacts/coronas-paso-sumar.png',fullPage:true});
+ await page.getByRole('tab',{name:/Regalar a un amigo/}).click();await page.getByLabel('Coronas a enviar').waitFor();await page.screenshot({path:'test/artifacts/coronas-paso-regalar.png',fullPage:true});
+ await page.getByRole('tab',{name:/Usar mis coronas/}).click();await page.getByRole('heading',{name:'Usarlas en una junta',exact:true}).waitFor();await page.screenshot({path:'test/artifacts/coronas-paso-usar.png',fullPage:true});
+ await page.getByRole('tab',{name:/Sumar mi compra/}).click();await page.getByRole('heading',{name:'Ingresa tu boleta',exact:true}).waitFor();
  await page.getByLabel('Código de la boleta').fill('PRUEBA-NOEXISTE');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByRole('status').filter({hasText:/no encontrado/}).waitFor();assert.equal(balance,13000);
  await page.getByLabel('Código de la boleta').fill('PRUEBA-60000');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByRole('status').filter({hasText:/Boleta canjeada/}).waitFor();assert.equal(balance,13000);assert.equal(pending,3600);
  await page.getByText(/\$3.600 por activar/).waitFor();assert.equal(await page.getByRole('button',{name:'Activar mis coronas de prueba'}).count(),0);
  await page.getByLabel('Código de la boleta').fill('PRUEBA-60000');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByRole('status').filter({hasText:/Ya habías canjeado/}).waitFor();assert.equal(pending,3600);
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Wallet receipt mobile overflow');await page.screenshot({path:'test/artifacts/coronas-boleta-mobile.png',fullPage:true});
  await page.setViewportSize({width:1440,height:1000});
- const boxes=await page.locator('.wallet-actions > section').evaluateAll(items=>items.map(item=>{const r=item.getBoundingClientRect();return {top:r.top,bottom:r.bottom};}));assert.ok(boxes[1].top>=boxes[0].bottom&&boxes[2].top>=boxes[1].bottom,'Wallet actions must remain stacked on desktop');
+ const tabBoxes=await page.getByRole('tab').evaluateAll(items=>items.map(item=>{const r=item.getBoundingClientRect();return {top:Math.round(r.top),bottom:r.bottom};}));const panelTop=await page.locator('.coin-tab:not([hidden])').evaluate(el=>el.getBoundingClientRect().top);assert.ok(tabBoxes.every(b=>b.top===tabBoxes[0].top),'Los tres pasos van en una sola fila');assert.ok(panelTop>=tabBoxes[0].bottom,'El contenido del paso queda bajo las pestañas');
  await page.screenshot({path:'test/artifacts/coronas-boleta-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:844});
  await page.goto(base+'/pruebas');await page.getByText('Canjeada por Martín').waitFor();
  await page.goto(base+'/perfil');await page.getByRole('button',{name:'Cerrar sesión',exact:true}).click();await page.getByRole('link',{name:'Unirme al Club'}).waitFor();await page.getByRole('link',{name:'Ver la carta ↗',exact:true}).click();assert.equal(await page.getByText('Rey de pruebas · NO ES UN LOCAL REAL',{exact:true}).count(),0);

@@ -53,7 +53,7 @@ Sigue [la guía de Supabase y Vercel](docs/CONEXION-SUPABASE-VERCEL.md). Incluye
 - Ficha de descuento de 10 minutos, reserva y devolución al cancelar/vencer. Hasta 20.000, mínimo 1.000, múltiplos de 500 y un canje diario.
 - Panel `/admin`: resumen, socios recientes, mantenimiento de locales/cartas verificadas y acreditaciones manuales de coronas con motivo e historial. Solo administradores, hasta 20.000 por carga, saldo inmediato sin aumentar rango. Requiere la migración `202610070002_admin_credits.sql`.
 - Panel `/caja`: consulta de socios, aplicación de fichas, registro y anulación de boletas. Solo cuentas con permiso, limitado al local correspondiente.
-- Pantalla `/coronas`: saldo, ingreso del código de boleta, uso de descuentos y envío a amigos, en ese orden vertical. El formulario usa las boletas del piloto; los códigos de compras reales aún requieren integración.
+- Pantalla `/coronas`: saldo y tres pasos en pestañas, en el orden de una visita: **1 · Usar mis coronas** (antes de pedir la cuenta: ficha de descuento), **2 · Sumar mi compra** (después de pagar: código de la boleta y mesas compartidas) y **3 · Regalar a un amigo**. Se abre en "Usar" si hay saldo o una ficha activa y en "Sumar" si no; `?tab=usar|sumar|regalar` abre una pestaña concreta. El formulario usa las boletas del piloto; los códigos de compras reales aún requieren integración.
 - Pantalla `/pruebas`: piloto autorizado por administrador para dos cuentas, cinco boletas ficticias de un uso, local virtual restringido, coronas pendientes 24 horas desde el canje del código y cierre con auditoría conservada.
 - API `/api/pos` para integración externa, con llave independiente por local y credenciales guardadas en el servidor.
 

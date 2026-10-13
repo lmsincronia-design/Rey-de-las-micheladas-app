@@ -163,3 +163,36 @@ dl{font-size:16px}
 }
 @media(prefers-reduced-motion:no-preference){.podium-slot{animation:podium-in .5s both}.p1{animation-delay:.1s}.p2{animation-delay:.2s}.p3{animation-delay:.3s}}
 @keyframes podium-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ── Coronas: tres pasos (Usar · Sumar · Regalar) ── */
+.coin-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:26px 0 18px}
+.coin-tabs button{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px 14px 14px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:#eeeede;min-height:112px;transition:border-color .2s,background .2s,transform .2s}
+.coin-tabs button:hover{border-color:#697247}
+.coin-tabs button[aria-selected=true]{border-color:var(--yellow);background:radial-gradient(ellipse at top right,#405121 0%,#242d19 70%);box-shadow:0 0 0 1px var(--yellow) inset}
+.coin-tabs strong{font-size:16px;line-height:1.25}
+.coin-tabs small{font-size:13px;color:var(--muted);line-height:1.35}
+.coin-tabs button[aria-selected=true] small{color:#e4eccb}
+.coin-icon{font-size:24px;line-height:1}
+.coin-step{position:absolute;top:10px;right:12px;font-family:Anton;font-size:22px;color:var(--yellow);opacity:.85}
+.coin-tab[hidden]{display:none!important}
+.when{margin:0 0 16px;padding:12px 14px;border-left:4px solid var(--lime);border-radius:8px;background:#d2e8780f;color:#d7e0be;font-size:15px;line-height:1.6}
+.when b{color:var(--yellow)}
+.when-before{border-left-color:var(--yellow)}
+.when em{font-style:normal;text-decoration:underline}
+@media(max-width:600px){
+ .coin-tabs{gap:8px}
+ .coin-tabs button{padding:12px 10px;min-height:128px;gap:3px}
+ .coin-tabs strong{font-size:14px}.coin-tabs small{font-size:12px}
+ .coin-step{top:8px;right:9px;font-size:18px}
+}
+/* Cabecera: que rango + chip TOP + % quepan en el recuadro en pantallas angostas */
+.header-rank-top{flex-wrap:nowrap;min-width:0;gap:6px}
+.header-rank-top .header-top{margin-left:0;flex:0 1 auto}
+@media(max-width:600px){
+ .header-rank{padding-right:10px;gap:8px;min-width:0}
+ .header-rank-top{gap:5px}
+ .header-rank strong{letter-spacing:.01em;font-size:17px}
+ .header-top{padding:2px 5px;font-size:10px;letter-spacing:.02em;gap:2px}
+ .header-rank-pct{font-size:12px;padding:3px 6px}
+ .header-rank .rank-badge{width:46px;height:46px}
+}

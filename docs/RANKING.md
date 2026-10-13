@@ -22,7 +22,7 @@ export const BENEFICIOS_TOP10=[{icon:'🍺',title:'Michelada de cortesía cada m
 `IDEAS_EJEMPLO` solo se muestra en la vista de ejemplo, rotulado como idea.
 
 ## Base de datos
-Migración `supabase/migrations/202610130001_ranking.sql` (**aplicar una vez**, SQL Editor de Supabase):
+Migración `supabase/migrations/202610130001_ranking.sql` (**aplicada el 13-oct-2026** en el proyecto `Rey-de-las-micheladas-app`; en otro proyecto, ejecutarla una vez en el SQL Editor):
 - `profiles.ranking_visible boolean default false`
 - `club_ranking(top_n)` → Top N, total clasificado y la posición del que consulta (requiere sesión)
 - `set_ranking_visibility(enabled)`
