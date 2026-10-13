@@ -45,6 +45,7 @@ Sigue [la guía de Supabase y Vercel](docs/CONEXION-SUPABASE-VERCEL.md). Incluye
 - Envíos entre amigos aceptados, con saldo disponible, idempotencia, bloqueos de filas y libro de movimientos. Tope 20.000 por envío / 50.000 por día.
 - Avisos **al abrir la carta**, con consentimiento para compartir actividad. Silencio independiente por amigo. Antispam: al menos 15 minutos entre avisos y dos horas para repetir el mismo local.
 - Notificaciones **dentro de la app**, vía Supabase Realtime y consulta periódica de respaldo. No son push con la app cerrada ni mensajes de WhatsApp.
+- **Ranking Top 10** (`/ranking`): podio, posición propia ("TOP 27") y vista de ejemplo con perfiles ficticios. Nombre público solo con consentimiento. Guía: [docs/RANKING.md](docs/RANKING.md). Requiere la migración `202610130001_ranking.sql`.
 - Rangos del prototipo: Plebeyo, Comerciante, Guardia Real, Noble y Rey. Porcentajes 4/6/8/10/12 según consumo de 12 meses; las transferencias no aumentan el rango.
 - Código de socio y código de mesa con cantidad de personas. Enlaces con cupos para que los acompañantes reclamen su parte, conservados durante registro y confirmación de correo.
 - Rangos con distintivos y barra de progreso permanente en la cabecera para usuarios conectados.

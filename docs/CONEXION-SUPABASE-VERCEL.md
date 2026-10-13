@@ -88,7 +88,12 @@ Con la segunda migración aplicada y tu cuenta como administrador:
 
 Las acreditaciones son saldo utilizable en este proyecto, quedan en el libro de movimientos y no aumentan el rango. No es dinero ficticio separado: carga solo el monto que quieras habilitar. El tope es 20.000 por acreditación. Si existe deuda por una boleta anulada, la carga la cubre primero. Solo los administradores pueden acreditar; un cajero o socio no puede concederse saldo.
 
-## 5. Cinco locales reales
+## 5. Locales reales (los 33 de la carta oficial)
+
+> **Atajo (12-oct-2026):** ejecuta `supabase/migrations/202610120001_locales_reales.sql` en el SQL Editor. Carga los 33 locales de la carta QR con nombre, dirección y comuna, activos y verificados (idempotente; no pisa lo que edites en `/admin`). Sin coordenadas: "Cerca de mí" necesita que las cargues en `/admin`. Mientras la base no tenga locales, la app muestra igualmente el catálogo `src/locales-rey.js` (mismo contenido); para **reservar descuentos y operar caja** los locales deben estar en la base. Confirma con el dueño la comuna de "Barra del Rey · Boulevard Bellavista" y de "Alameda 1653". Para regenerar: `node supabase/scripts/generar-locales.mjs`. Los UUID de los locales son los que van en `POS_KEYS_JSON` y en `staff_members.location_id`.
+
+### Carga manual (alternativa)
+
 
 Desde `/admin`, agrega al menos cinco locales que identifiques en el enlace QRFY:
 

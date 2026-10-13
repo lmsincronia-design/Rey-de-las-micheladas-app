@@ -1,5 +1,6 @@
 import './styles.css';
 import {headerRank,ranksPanel} from './ranks.js';
+import {rankingPage,loadRanking} from './ranking.js';
 import {myTables,receiptTablesPanel,bindTableShares,memberTablePage,tableInvitePage,rememberTableInvite,pendingTableInvite,afterLoginPath} from './tables.js';
 import {receiptClaimPanel,bindReceiptClaim,receiptClaimStatus} from './receipt-claim.js';
 import {testPilotPage,testMenu} from './test-pilot.js';
@@ -7,12 +8,17 @@ import qr from 'qrcode-generator';
 import {adminCreditsPanel,bindAdminCredits} from './admin-credits.js';
 import { supabase, configured, rpc, rows, profile, authAction } from './api.js';
 import { esc, money, normalizeRut, normalizePhone, validateRegistration, safeMenuUrl, distanceKm } from './domain.js';
+import { LOCALES_REY } from './locales-rey.js';
 
 const app=document.querySelector('#app');
-const state={session:null,profile:null,wallet:null,staff:null,locations:[],friends:[],notifications:[],loaded:false};
+const state={session:null,profile:null,wallet:null,staff:null,ranking:null,locations:[],friends:[],notifications:[],loaded:false};
 let authVersion=0;
 let pageVersion=0,channel=null,poll=null,seenNotifications=new Set(),refreshing=false;
-const menuSource='https://qrfy.io/p/oOBx-dlqTy';
+// La carta digital del Rey vive en public/carta/ (ruta interna). Siempre con /index.html: en Vite dev /carta/ cae en la SPA.
+const menuSource='/carta/index.html?from=club';
+const cartaUrl=l=>'/carta/index.html?'+new URLSearchParams({local:`${l.name} ${l.address}`,from:'club'});
+// Para mostrar la carta: locales de la base; si aún no hay ninguno cargado, el catálogo oficial de 33 locales.
+const browseLocations=()=>state.locations.length?state.locations:LOCALES_REY;
 const route=()=>location.pathname;
 const link=(href,label,cls='')=>`<a data-nav href="${href}" class="${cls}">${label}</a>`;
 const empty=(title,body)=>`<div class="empty"><span>✦</span><h3>${title}</h3><p>${body}</p></div>`;
@@ -31,8 +37,8 @@ function date(value){return new Date(value).toLocaleString('es-CL',{dateStyle:'m
 function qrSvg(value){const code=qr(0,'M');code.addData(value);code.make();return code.createSvgTag({cellSize:5,margin:2,scalable:true});}
 function shell(content){
  const unread=state.notifications.filter(n=>!n.read_at).length;
- const tabs=[['/','Inicio','⌂'],['/locales','La carta','▤'],['/amigos','Amigos','♡'],['/coronas','Coronas','♛']];
- app.innerHTML=`<header class="topbar"><div class="wrap top-inner">${link('/','<img src="/assets/logo-rey.jpg" alt="El Rey de las Micheladas"><span>CLUB<span>DEL REY</span></span>','brand')}<div class="top-actions">${state.session?`${link('/notificaciones',`<span aria-hidden="true">♧</span><span class="sr-only">Notificaciones</span>${unread?`<b class="badge">${unread}</b>`:''}`,'bell')}${headerRank(state.wallet)}${link('/perfil',esc(state.profile?.first_name?.slice(0,1)||'👤'),'avatar')}`:link('/entrar','Iniciar sesión','btn small secondary')}</div></div></header><main class="wrap">${!configured?'<div class="connection-note">La web está preparada. Las cuentas y coronas se habilitarán al conectar Supabase.</div>':''}${content}</main><nav class="bottom-nav" aria-label="Navegación principal">${tabs.map(([href,label,icon])=>link(href,`<span aria-hidden="true">${icon}</span>${label}`,route()===href?'active':'')).join('')}</nav><footer class="wrap footer"><span>Una buena junta empieza aquí. 🍺</span>${link('/terminos','Términos y privacidad')}</footer>`;
+ const tabs=[['/','Inicio','⌂'],['/locales','La carta','▤'],['/amigos','Amigos','♡'],['/coronas','Coronas','♛'],['/ranking','Ranking','★']];
+ app.innerHTML=`<header class="topbar"><div class="wrap top-inner">${link('/','<img src="/assets/logo-rey.jpg" alt="El Rey de las Micheladas"><span>CLUB<span>DEL REY</span></span>','brand')}<div class="top-actions">${state.session?`${link('/notificaciones',`<span aria-hidden="true">🔔</span><span class="sr-only">Notificaciones</span>${unread?`<b class="badge">${unread}</b>`:''}`,'bell')}${headerRank(state.wallet,state.ranking)}${link('/perfil',esc(state.profile?.first_name?.slice(0,1)||'👤'),'avatar')}`:link('/entrar','Iniciar sesión','btn small secondary')}</div></div></header><main class="wrap">${!configured?'<div class="connection-note">La web está preparada. Las cuentas y coronas se habilitarán al conectar Supabase.</div>':''}${content}</main><nav class="bottom-nav" aria-label="Navegación principal">${tabs.map(([href,label,icon])=>link(href,`<span aria-hidden="true">${icon}</span>${label}`,(route()===href||(href==='/ranking'&&route()==='/rangos'))?'active':'')).join('')}</nav><footer class="wrap footer"><span>Una buena junta empieza aquí. 🍺</span>${link('/terminos','Términos y privacidad')}</footer>`;
 }
 const heading=(eyebrow,title,description='')=>`<div class="page-heading"><p class="eyebrow">${eyebrow}</p><h1>${title}</h1>${description?`<p class="muted">${description}</p>`:''}</div>`;
 function authRequired(){if(state.session)return false;shell(`${heading('TU CLUB','Todo empieza con tu cuenta','Únete para hacer amigos, juntar coronas y compartir la buena junta.')}<div class="actions">${link('/registro','Crear mi cuenta','btn')}${link('/entrar','Ya soy del Club','btn secondary')}</div>`);return true;}
@@ -40,7 +46,7 @@ function home(){
  const p=state.profile,w=state.wallet;
  shell(`<section class="hero"><div class="hero-copy"><p class="eyebrow">EL REY DE LAS MICHELADAS</p><h1>LA BUENA<br>JUNTA TIENE<br><em>SU CLUB.</em></h1><p>Tu gente. Tu michelada.<br>Y coronas para la próxima ronda.</p><div class="actions">${link('/locales','Ver la carta ↗','btn')}${link(state.session?'/amigos':'/registro',state.session?'Invitar a mi gente':'Unirme al Club','btn secondary')}</div><div class="hero-caption"><span>♛ 1 corona = $1</span><span>♡ Comparte con amigos</span></div></div><div class="hero-photo"><img src="/assets/foto-junta-rey.jpg" alt="Una junta en El Rey de las Micheladas con dos micheladas en la mesa"><div class="photo-label">EL PLAN ES<br><strong>JUNTARNOS.</strong> 🍺</div></div></section>
  ${p?`<section class="member-card"><div><span class="eyebrow">HOLA, ${esc(p.first_name.toUpperCase())}</span><h2>Tu próxima ronda<br>empieza con ${money(w?.balance)}.</h2><p>${esc(w?.tier||'Plebeyo')} · ${w?.pct||4}% de vuelta por tus compras</p></div><div class="member-side"><span class="crown">♛</span>${link('/coronas','Ver mis coronas →','text-link')}${link('/codigo','Mi código y mi mesa','text-link')}</div></section>`:`<section class="join-banner"><div><p class="eyebrow">MÁS QUE UN DESCUENTO</p><h2>Vuelve por la junta.<br>Quédate por las coronas.</h2></div>${link('/registro','Hacerme socio →','btn')}</section>`}
- <section class="section"><div class="section-title"><h2>¿EN QUÉ REY NOS VEMOS?</h2>${link('/locales','Elegir local →','text-link')}</div><p class="muted">Elige dónde será la junta y abre la carta de ese local.</p>${locationCards(state.locations.slice(0,5))}</section>
+ <section class="section"><div class="section-title"><h2>¿EN QUÉ REY NOS VEMOS?</h2>${link('/locales','Elegir local →','text-link')}</div><p class="muted">Elige dónde será la junta y abre la carta de ese local.</p>${locationCards(browseLocations().slice(0,5))}</section>
  <section class="steps"><article><span>01</span><h3>Encuentra tu Rey</h3><p>Abre la carta del local que tú elijas.</p></article><article><span>02</span><h3>Junta a tu gente</h3><p>Añade amigos por código o QR y avísales del plan.</p></article><article><span>03</span><h3>Comparte coronas</h3><p>Cada corona vale un peso. Envía a tus amigos y canjea tu descuento.</p></article></section>`);
  bindMenus();
 }
@@ -49,22 +55,22 @@ function locationCards(items){
  return `<div class="location-grid">${items.map(l=>`<article class="location-card"><div class="location-top">🍺<span class="pill">${esc(l.commune)}</span></div><h3>${esc(l.name)}</h3><p>${esc(l.address)}</p><button class="btn secondary" data-menu="${l.id}">Abrir carta ↗</button></article>`).join('')}</div>`;
 }
 function bindMenus(){document.querySelectorAll('[data-menu]').forEach(b=>b.addEventListener('click',async()=>{
- const local=state.locations.find(x=>x.id===b.dataset.menu),url=safeMenuUrl(local?.menu_url);if(!url)return toast('La carta no tiene un enlace válido.',true);
- const tab=window.open(url,'_blank','noopener,noreferrer'); // Must run directly on the user gesture.
+ const local=browseLocations().find(x=>x.id===b.dataset.menu);if(!local)return toast('No encontramos ese local.',true);
+ const tab=window.open(cartaUrl(local),'_blank','noopener'); // Must run directly on the user gesture.
  void tab;
- if(state.session && state.profile?.share_activity){try {if(await rpc('announce_location',{location_value:local.id}))toast('Tus amigos recibieron el aviso de la junta 🍺');}catch(e){toast('La carta se abrió, pero no pudimos avisar a tus amigos.',true);}}
+ if(state.session && state.profile?.share_activity && state.locations.some(x=>x.id===local.id)){try {if(await rpc('announce_location',{location_value:local.id}))toast('Tus amigos recibieron el aviso de la junta 🍺');}catch(e){toast('La carta se abrió, pero no pudimos avisar a tus amigos.',true);}}
 }));}
 function locations(){
- const communes=[...new Set(state.locations.map(l=>l.commune))].sort();
- shell(`${heading('EL PLAN EMPIEZA AQUÍ','ELIGE TU REY.','Selecciona una ubicación y abre su carta. No compartimos tu ubicación GPS.')}<div class="filters"><label>Comuna<select id="commune" aria-label="Comuna"><option value="">Todos los locales</option>${communes.map(c=>`<option>${esc(c)}</option>`).join('')}</select></label><button class="btn secondary" id="nearby">Cerca de mí</button></div><div id="locations-grid">${locationCards(state.locations)}</div>${state.session?`<label class="check sharing"><input type="checkbox" id="share" ${state.profile?.share_activity?'checked':''}> Avisar a mis amigos cuando abra una carta 🍺</label><p class="hint">El aviso dice que estás mirando la carta; no confirma que ya estés en el local. Tus amigos pueden silenciarlo.</p>`:`<p class="hint">${link('/entrar','Inicia sesión')} para avisar a tus amigos cuando abras una carta.</p>`}`);
+ const communes=[...new Set(browseLocations().map(l=>l.commune))].sort();
+ shell(`${heading('EL PLAN EMPIEZA AQUÍ','ELIGE TU REY.','Selecciona una ubicación y abre su carta. No compartimos tu ubicación GPS.')}<div class="filters"><label>Comuna<select id="commune" aria-label="Comuna"><option value="">Todos los locales</option>${communes.map(c=>`<option>${esc(c)}</option>`).join('')}</select></label><button class="btn secondary" id="nearby">Cerca de mí</button></div><div id="locations-grid">${locationCards(browseLocations())}</div>${state.session?`<label class="check sharing"><input type="checkbox" id="share" ${state.profile?.share_activity?'checked':''}> Avisar a mis amigos cuando abra una carta 🍺</label><p class="hint">El aviso dice que estás mirando la carta; no confirma que ya estés en el local. Tus amigos pueden silenciarlo.</p>`:`<p class="hint">${link('/entrar','Inicia sesión')} para avisar a tus amigos cuando abras una carta.</p>`}`);
  bindMenus();
- document.querySelector('#commune').onchange=e=>{document.querySelector('#locations-grid').innerHTML=locationCards(state.locations.filter(l=>!e.target.value||l.commune===e.target.value));bindMenus();};
+ document.querySelector('#commune').onchange=e=>{document.querySelector('#locations-grid').innerHTML=locationCards(browseLocations().filter(l=>!e.target.value||l.commune===e.target.value));bindMenus();};
  document.querySelector('#nearby').onclick=()=>{
  if(!navigator.geolocation)return toast('Tu navegador no permite consultar la ubicación.',true);
- if(!state.locations.some(l=>l.latitude!=null&&l.longitude!=null))return toast('Aún no hay coordenadas verificadas para ordenar los locales.');
+ if(!browseLocations().some(l=>l.latitude!=null&&l.longitude!=null))return toast('Aún no hay coordenadas verificadas para ordenar los locales.');
  navigator.geolocation.getCurrentPosition(position=>{
  const coords=position.coords;
- const sorted=[...state.locations].sort((a,b)=>distanceKm(coords,a)-distanceKm(coords,b));
+ const sorted=[...browseLocations()].sort((a,b)=>distanceKm(coords,a)-distanceKm(coords,b));
  document.querySelector('#commune').value='';document.querySelector('#locations-grid').innerHTML=locationCards(sorted);bindMenus();toast('Locales ordenados por cercanía. Tu ubicación no se guardó.');
  },()=>toast('No pudimos obtener tu ubicación. Puedes elegir la comuna.',true),{timeout:10000});
  };
@@ -150,7 +156,7 @@ function profilePage(){
  document.querySelector('#profile-share').onchange=e=>run(e.target,async()=>{await rpc('set_activity_sharing',{enabled:e.target.checked});state.profile.share_activity=e.target.checked;toast('Preferencia guardada.');},()=>{e.target.checked=p.share_activity;});
  document.querySelector('#logout').onclick=()=>run(document.querySelector('#logout'),async()=>{await authAction('signOut');await loadUser(null);go('/');});
 }
-function ranks(){shell(`${heading('CADA JUNTA SUMA','DE PLEBEYO A REY.','Tu rango depende de tu propio consumo en los últimos 12 meses. En una mesa compartida, suma solo tu parte de la cuenta.')}${ranksPanel(state.wallet)}<p class="hint">Cada compra o reclamo usa tu rango antes de sumar ese consumo. Tope de 8.000 coronas por persona y boleta; disponibles 24 horas después de acreditarlas.</p>`);}
+function ranks(){shell(`${heading('CADA JUNTA SUMA','DE PLEBEYO A REY.','Tu rango depende de tu propio consumo en los últimos 12 meses. En una mesa compartida, suma solo tu parte de la cuenta.')}${ranksPanel(state.wallet)}<div class="actions">${link('/ranking','Ver el ranking del Club →','btn')}</div><p class="hint">Cada compra o reclamo usa tu rango antes de sumar ese consumo. Tope de 8.000 coronas por persona y boleta; disponibles 24 horas después de acreditarlas.</p>`);}
 
 function terms(){shell(`${heading('LAS REGLAS DE LA JUNTA','TÉRMINOS Y PRIVACIDAD.')}<article class="panel legal"><h2>Club del Rey · versión de desarrollo</h2><p>El Club es para mayores de 18 años. Una corona equivale a un peso chileno de descuento; no es dinero retirable ni un medio de pago.</p><h3>Tu información</h3><p>Usamos nombre, apellido, RUT, teléfono, correo y cumpleaños para identificar tu cuenta, administrar beneficios y evitar duplicados. Supabase administra las contraseñas; no guardamos contraseñas en tu perfil. Los amigos solo ven tu nombre y la inicial de tu apellido.</p><h3>Amigos y actividad</h3><p>Una amistad requiere aceptación. Puedes eliminar amigos y silenciar sus avisos. Compartir la apertura de cartas es opcional y se desactiva desde tu perfil. Nunca compartimos tu GPS: si usas “Cerca de mí”, la posición se utiliza solamente en tu navegador.</p><h3>Coronas</h3><p>Las compras se acreditan desde caja y se activan en 24 horas. Las transferencias entre amigos aceptados descuentan tu saldo disponible y no aumentan el rango. Una boleta anulada puede generar un ajuste que se cubre con las siguientes coronas. Los canjes vencen en 10 minutos y requieren validación de caja.</p><h3>Antes de la apertura comercial</h3><p>Esta versión aún requiere que El Rey defina el responsable de datos, el contacto para ejercer derechos, la política de conservación y las condiciones comerciales definitivas. No abras el registro a clientes reales hasta completar esa información y la revisión legal.</p></article>`);}
 async function adminPage(){
@@ -185,22 +191,22 @@ async function render(){
  try{
  const path=route();
  if(path==='/mesa'){await tableInvitePage({shell,heading,state,run,toast,refresh:refreshData,stillCurrent:()=>version===pageVersion});}else if(path==='/pruebas'){if(authRequired())return;await testPilotPage({shell,heading,state,run,toast,stillCurrent:()=>version===pageVersion,refresh:async()=>{await refreshData();state.locations=await rows('locations',q=>q.order('name'));await render();}});}else if(path==='/carta-prueba')testMenu({shell,heading});else if(path==='/admin')await adminPage();else if(path==='/caja')await cashierPage();else if(path==='/')home();else if(path==='/locales')locations();else if(['/entrar','/registro','/olvide-contrasena','/recuperar'].includes(path))authPage({'/entrar':'login','/registro':'register','/olvide-contrasena':'reset','/recuperar':'recover'}[path]);
- else if(path==='/amigos')await friends();else if(['/coronas','/canjear','/historial'].includes(path))await wallet();else if(path==='/codigo')await memberCode();else if(path==='/notificaciones')notifications();else if(path==='/perfil')profilePage();else if(path==='/rangos')ranks();else if(path==='/terminos')terms();else shell(`${heading('ESTA MESA NO EXISTE','NO ENCONTRAMOS ESA PÁGINA.')} ${link('/','Volver al inicio','btn')}`);
- if(version===pageVersion)document.title=`Club del Rey · ${({'/locales':'La carta','/amigos':'Amigos','/coronas':'Coronas','/entrar':'Iniciar sesión','/registro':'Crear cuenta'}[path]||'La buena junta')}`;
+ else if(path==='/amigos')await friends();else if(['/coronas','/canjear','/historial'].includes(path))await wallet();else if(path==='/codigo')await memberCode();else if(path==='/notificaciones')notifications();else if(path==='/perfil')profilePage();else if(path==='/rangos')ranks();else if(path==='/ranking')await rankingPage({shell,heading,link,state,run,toast,go,refreshRanking:async()=>{state.ranking=await loadRanking();const el=document.querySelector('.header-rank');if(el&&state.wallet)el.outerHTML=headerRank(state.wallet,state.ranking);}});else if(path==='/terminos')terms();else shell(`${heading('ESTA MESA NO EXISTE','NO ENCONTRAMOS ESA PÁGINA.')} ${link('/','Volver al inicio','btn')}`);
+ if(version===pageVersion)document.title=`Club del Rey · ${({'/locales':'La carta','/ranking':'Ranking','/amigos':'Amigos','/coronas':'Coronas','/entrar':'Iniciar sesión','/registro':'Crear cuenta'}[path]||'La buena junta')}`;
  }catch(e){if(version===pageVersion){shell(`${heading('VAMOS DE NUEVO','NO PUDIMOS CARGAR TU CLUB.',esc(friendly(e)))}<button class="btn" id="retry">Reintentar</button>`);document.querySelector('#retry').onclick=async()=>{try{await refreshData();render();}catch(e){fail(e);}};}}
 }
 async function refreshData(){
  if(!state.session)return;
  const ownerId=state.session.user.id;
- const [p,w,f,n,staff]=await Promise.all([profile(state.session.user.id),rpc('my_wallet'),rpc('my_friends'),rows('notifications',q=>q.order('created_at',{ascending:false}).limit(60)),rpc('my_staff_role')]);
+ const [p,w,f,n,staff,rk]=await Promise.all([profile(state.session.user.id),rpc('my_wallet'),rpc('my_friends'),rows('notifications',q=>q.order('created_at',{ascending:false}).limit(60)),rpc('my_staff_role'),loadRanking()]);
  if(state.session?.user.id!==ownerId)return;
- state.profile=p;state.wallet=w;state.staff=staff;state.friends=f;state.notifications=n;
- const rank=document.querySelector('.header-rank');if(rank)rank.outerHTML=headerRank(w);
+ state.profile=p;state.wallet=w;state.staff=staff;state.friends=f;state.notifications=n;state.ranking=rk;
+ const rank=document.querySelector('.header-rank');if(rank)rank.outerHTML=headerRank(w,state.ranking);
 }
 async function loadUser(session){
  const version=++authVersion;
  state.session=session;
- if(session){await refreshData();}else{state.profile=null;state.wallet=null;state.staff=null;state.friends=[];state.notifications=[];}
+ if(session){await refreshData();}else{state.profile=null;state.wallet=null;state.staff=null;state.ranking=null;state.friends=[];state.notifications=[];}
  const visibleLocations=await rows('locations',q=>q.order('name'));
  if(version!==authVersion)return;
  state.locations=visibleLocations;

@@ -1,6 +1,6 @@
 import {rpc} from './api.js';
 import {money} from './domain.js';
-import {tableSelector} from './tables.js';
+import {tableSelector,readPeople} from './tables.js';
 
 export function receiptClaimPanel(pilot,{title='Ingresa tu boleta',showInactive=true,checkouts=[]}={}) {
  const enabled=pilot?.enabled&&pilot?.participant;
@@ -19,14 +19,24 @@ export function receiptClaimPanel(pilot,{title='Ingresa tu boleta',showInactive=
  </section>`;
 }
 
+let tableRequest=null; // keeps one checkout per party size so a retry never creates a second table
 export function bindReceiptClaim({run,toast,refresh}) {
  const form=document.querySelector('#receipt-form');
  if(form)form.onsubmit=e=>{e.preventDefault();run(e.submitter,async()=>{
   const d=Object.fromEntries(new FormData(form));
-  const result=await rpc('claim_test_receipt',{code_value:d.code.trim().toUpperCase(),redemption_code:d.redemption.trim().toUpperCase()||null,table_code:d.table_code||null});
+  let tableCode=d.table_code||null;
+  if(!tableCode){
+   const people=readPeople(form);
+   if(people>1){
+    if(!tableRequest||tableRequest.people!==people)tableRequest={people,id:crypto.randomUUID()};
+    const table=await rpc('prepare_table',{people_value:people,request_id:tableRequest.id});
+    tableCode=table.code;
+   }
+  }
+  const result=await rpc('claim_test_receipt',{code_value:d.code.trim().toUpperCase(),redemption_code:d.redemption.trim().toUpperCase()||null,table_code:tableCode});
+  tableRequest=null;
   await refresh();toast(result.already_claimed?'Ya habías canjeado esa boleta; no duplicamos tus coronas.':`Boleta canjeada: ${money(result.earned)} en coronas por activar.`);
  });};
-
 }
 
 export async function receiptClaimStatus() {

@@ -20,8 +20,18 @@ export async function myTables(){
  try{const [checkouts,receipts]=await Promise.all([rpc('my_table_checkouts'),rpc('my_receipt_tables')]);return {checkouts,receipts};}
  catch(e){if(e.code==='PGRST202')return {checkouts:[],receipts:[],missing:true};throw e;}
 }
+export function peoplePicker(name='people',value=1){
+ const chips=Array.from({length:10},(_,i)=>i+1).map(n=>`<label class="chip"><input type="radio" name="${name}_choice" value="${n}" ${n===value?'checked':''}><span>${n}</span></label>`).join('');
+ return `<fieldset class="people-picker"><legend>Personas en la mesa <small>(contándote a ti)</small></legend><div class="chips">${chips}<label class="chip chip-more"><input type="radio" name="${name}_choice" value="more"><span>Más</span></label></div><label class="people-more">Escribe cuántos son (11 a 20)<input name="${name}_more" type="number" inputmode="numeric" min="11" max="20" step="1" placeholder="Ej. 12"></label><p class="hint">La cuenta se divide en partes iguales: cada persona suma coronas solo por su parte.</p></fieldset>`;
+}
+export function readPeople(form,name='people'){
+ const choice=form.querySelector(`[name="${name}_choice"]:checked`)?.value;
+ const people=choice==='more'?Number(form.elements[`${name}_more`].value):Number(choice||1);
+ if(!Number.isInteger(people)||people<1||people>20)throw new Error('Indica entre 1 y 20 personas.');
+ return people;
+}
 export function tableSelector(checkouts=[]){
- return `<label>Mesa de esta boleta<select name="table_code"><option value="">Solo mi consumo · 1 persona</option>${checkouts.map(t=>`<option value="${esc(t.code)}">${t.people} personas · ${esc(t.code)}</option>`).join('')}</select></label><p class="hint">¿Pagaste por la mesa? <a data-nav href="/codigo">Prepara tu código con la cantidad de personas</a> y selecciónalo aquí. Solo se acredita tu parte; después compartes el enlace.</p>`;
+ return `${peoplePicker('people',1)}${checkouts.length?`<label>¿Ya preparaste una mesa? Elígela aquí<select name="table_code"><option value="">No, usar la cantidad de personas de arriba</option>${checkouts.map(t=>`<option value="${esc(t.code)}">${t.people} personas · ${esc(t.code)}</option>`).join('')}</select></label>`:''}`;
 }
 export function receiptTablesPanel(receipts=[]){
  if(!receipts.length)return '';
@@ -37,10 +47,10 @@ export function bindTableShares({run,toast}){
 export async function memberTablePage({shell,heading,state,qrSvg,run,toast,stillCurrent,refresh}){
  const tables=await myTables();if(!stillCurrent())return;
  shell(`${heading('ANTES DE PEDIR LA CUENTA','TU MESA TAMBIÉN SUMA.','Indica cuántas personas consumieron. Caja confirma la cantidad y registra el total pagado; cada integrante gana coronas solo por su parte.')}
- <div class="two-col"><section class="panel"><h2>¿Cuántos son en la mesa?</h2><form id="prepare-table"><label>Personas en la mesa, incluyéndote<input name="people" type="number" min="1" max="20" step="1" value="1" required></label><p class="hint">Ejemplo: $100.000 entre 5 = $20.000 por persona. Plebeyo: 800 coronas; Comerciante: 1.200.</p><button class="btn full" type="submit" ${tables.missing?'disabled':''}>Preparar código para caja</button></form>${tables.missing?'<p>Falta actualizar la conexión para habilitar mesas.</p>':''}<p>Después de que caja registre la boleta, el enlace para tus acompañantes aparecerá en <a data-nav class="text-link" href="/coronas">Coronas</a>.</p></section><section class="panel code-panel"><p class="eyebrow">TU CÓDIGO DE SOCIO</p><h2>${esc(state.profile.first_name)} ${esc(state.profile.last_name)}</h2><div class="qr">${qrSvg(state.profile.member_code)}</div><div class="code">${esc(state.profile.member_code)}</div><p>Para identificarte en caja. Si pagas por la mesa, usa el código de mesa que prepares.</p></section></div>
+ <div class="two-col"><section class="panel"><h2>¿Cuántos son en la mesa?</h2><form id="prepare-table">${peoplePicker("people",1)}<p class="hint">Ejemplo: $100.000 entre 5 = $20.000 por persona. Plebeyo: 800 coronas; Comerciante: 1.200.</p><button class="btn full" type="submit" ${tables.missing?'disabled':''}>Preparar código para caja</button></form>${tables.missing?'<p>Falta actualizar la conexión para habilitar mesas.</p>':''}<p>Después de que caja registre la boleta, el enlace para tus acompañantes aparecerá en <a data-nav class="text-link" href="/coronas">Coronas</a>.</p></section><section class="panel code-panel"><p class="eyebrow">TU CÓDIGO DE SOCIO</p><h2>${esc(state.profile.first_name)} ${esc(state.profile.last_name)}</h2><div class="qr">${qrSvg(state.profile.member_code)}</div><div class="code">${esc(state.profile.member_code)}</div><p>Para identificarte en caja. Si pagas por la mesa, usa el código de mesa que prepares.</p></section></div>
  <section class="section"><h2>CÓDIGOS DE MESA POR USAR</h2>${tables.checkouts.map(t=>`<article class="panel table-checkout"><div><span class="pill">${t.people} PERSONA${t.people===1?'':'S'}</span><div class="code">${esc(t.code)}</div><p>Muestra este código a caja. Vence ${new Date(t.expires_at).toLocaleString('es-CL')}.</p></div><div class="qr">${qrSvg(t.code)}</div></article>`).join('')||'<p>Aún no has preparado una mesa.</p>'}</section>`);
  const form=document.querySelector('#prepare-table');let id=crypto.randomUUID(),lastPeople=null;
- form.onsubmit=e=>{e.preventDefault();run(e.submitter,async()=>{const people=Number(new FormData(form).get('people'));if(lastPeople!==null&&lastPeople!==people)id=crypto.randomUUID();lastPeople=people;await rpc('prepare_table',{people_value:people,request_id:id});await refresh();toast('Código de mesa preparado. Muéstralo a caja.');});};
+ form.onsubmit=e=>{e.preventDefault();run(e.submitter,async()=>{const people=readPeople(form);if(lastPeople!==null&&lastPeople!==people)id=crypto.randomUUID();lastPeople=people;await rpc('prepare_table',{people_value:people,request_id:id});await refresh();toast('Código de mesa preparado. Muéstralo a caja.');});};
 }
 export async function tableInvitePage({shell,heading,state,run,toast,refresh,stillCurrent}){
  const token=new URLSearchParams(location.search).get('codigo');

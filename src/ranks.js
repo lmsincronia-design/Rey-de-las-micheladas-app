@@ -1,10 +1,10 @@
 import {money} from './domain.js';
 export const TIERS=[
- {name:'Plebeyo',threshold:0,pct:4,color:'#d2e878',tag:'La primera junta',icon:'spark'},
- {name:'Comerciante',threshold:50000,pct:6,color:'#5ddfc4',tag:'Siempre trae el plan',icon:'coin'},
- {name:'Guardia Real',threshold:150000,pct:8,color:'#76baff',tag:'Cuida a su gente',icon:'shield'},
- {name:'Noble',threshold:350000,pct:10,color:'#c9a0ff',tag:'La mesa tiene estilo',icon:'diamond'},
- {name:'Rey',threshold:700000,pct:12,color:'#f8d34c',tag:'La junta lleva su nombre',icon:'crown'}
+ {name:'Plebeyo',threshold:0,pct:4,color:'#e3a15c',tag:'La primera junta',img:'plebeyo'},
+ {name:'Comerciante',threshold:50000,pct:6,color:'#5fd16a',tag:'Siempre trae el plan',img:'comerciante'},
+ {name:'Guardia Real',threshold:150000,pct:8,color:'#cfd8e0',tag:'Cuida a su gente',img:'guardia-real'},
+ {name:'Noble',threshold:350000,pct:10,color:'#c08bff',tag:'La mesa tiene estilo',img:'noble'},
+ {name:'Rey',threshold:700000,pct:12,color:'#f8d34c',tag:'La junta lleva su nombre',img:'rey'}
 ];
 export function rankProgress(spending=0){
  const value=Math.max(0,Number(spending)||0);
@@ -12,20 +12,23 @@ export function rankProgress(spending=0){
  const tier=TIERS[index],next=TIERS[index+1];
  return {tier,next,index,spending:value,percent:next?Math.min(100,Math.max(0,(value-tier.threshold)/(next.threshold-tier.threshold)*100)):100,remaining:next?Math.max(0,next.threshold-value):0};
 }
-export function rankBadge(tier){
- const paths={
- spark:'<path d="m32 15 4 12 13 5-13 5-4 12-4-12-13-5 13-5z"/><path d="m17 17 3 3m24 24 3 3m0-30-3 3M20 44l-3 3"/>',
- coin:'<circle cx="32" cy="32" r="16"/><path d="m32 20 4 8 9 4-9 4-4 8-4-8-9-4 9-4z"/>',
- shield:'<path d="m32 13 17 7v14c0 10-17 18-17 18S15 44 15 34V20z"/><path d="m24 33 8-8 8 8m-16 9 8-8 8 8"/>',
- diamond:'<path d="m14 26 9-12h18l9 12-18 26zM14 26h36M23 14l9 38 9-38M23 14l9 12 9-12"/>',
- crown:'<path d="m13 22 9 9 10-17 10 17 9-9-5 24H18zM19 52h26"/><circle cx="32" cy="36" r="3"/>'
- };
- return `<svg class="rank-badge" viewBox="0 0 64 64" aria-hidden="true" style="--rank-color:${tier.color}"><path class="badge-shell" d="m32 2 26 15v30L32 62 6 47V17z"/><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${paths[tier.icon]}</g></svg>`;
+// Chip "TOP 27" junto al rango (lo calcula la base; vacío si el ranking aún no está disponible).
+function topChipHtml(r){
+ const p=r?.me?.position;
+ if(!p)return '';
+ const top=p<=(r.limit||10);
+ return `<span class="header-top${top?' is-top':''}" title="Tu puesto en el ranking del Club"><span class="sr-only">Ranking: puesto </span>${top?'👑 ':''}TOP ${p}</span>`;
 }
-export function headerRank(wallet){
+export function rankBadge(tier){
+ return `<img class="rank-badge" src="/assets/rangos/${tier.img}.webp" alt="" width="120" height="120" decoding="async" style="--rank-color:${tier.color}">`;
+}
+export function headerRank(wallet,ranking=null){
  if(!wallet)return '';
  const p=rankProgress(wallet.spending);
- return `<a data-nav href="/rangos" class="header-rank" style="--rank-color:${p.tier.color}" aria-label="Rango ${p.tier.name}. ${p.next?`Faltan ${money(p.remaining)} de consumo para ${p.next.name}`:'Nivel máximo'}">${rankBadge(p.tier)}<span class="header-rank-info"><strong>${p.tier.name}</strong><span class="rank-track" role="progressbar" aria-label="Progreso del rango" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p.percent)}"><span style="width:${p.percent}%"></span></span><small>${p.next?`${p.tier.pct}% · próximo ${p.next.name}`:'12% · nivel máximo'}</small></span></a>`;
+ const near=p.next&&p.percent>=80?' near':'';
+ const hint=p.next?`Faltan ${money(p.remaining)} para ${p.next.name}`:'¡Eres Rey! Nivel máximo';
+ const hintHtml=p.next?`Faltan ${money(p.remaining)}<span class="hr-next"> para ${p.next.name}</span>`:'¡Eres Rey!<span class="hr-next"> Nivel máximo</span>';
+ return `<a data-nav href="/rangos" class="header-rank${near}" style="--rank-color:${p.tier.color}" aria-label="Rango ${p.tier.name}, ${p.tier.pct}% de vuelta. ${hint}. Toca para ver todos los rangos.">${rankBadge(p.tier)}<span class="header-rank-info"><span class="header-rank-top"><strong>${p.tier.name}</strong>${topChipHtml(ranking)}<b class="header-rank-pct">${p.tier.pct}%<span class="sr-only"> de vuelta</span></b></span><span class="rank-track" role="progressbar" aria-label="Progreso del rango" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p.percent)}"><span style="width:${p.percent}%"></span></span><small>${hintHtml}</small></span></a>`;
 }
 export function ranksPanel(wallet){
  const p=rankProgress(wallet?.spending);

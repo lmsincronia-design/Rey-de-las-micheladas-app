@@ -31,6 +31,7 @@ try{
    else if(path.endsWith('/my_wallet'))data={balance:0,pending:member===payer?(receipts.length?1200:0):guestCredits,spending:member===payer?(receipts.length?80000:60000):(guestClaimed?20000:0),tier:member===payer?'Comerciante':'Plebeyo',pct:member===payer?6:4,debt:0};
    else if(path.endsWith('/my_friends'))data=[];
    else if(path.endsWith('/my_staff_role'))data=member===payer?{role:'admin',location_id:null}:null;
+   else if(path.endsWith('/club_ranking'))data={total:0,limit:10,visible:false,top:[],me:null};
    else if(path.endsWith('/my_test_pilot'))data={enabled:false,is_admin:member===payer};
    else if(path.endsWith('/my_table_checkouts'))data=member===payer?checkouts.filter(t=>!t.receipt_id):[];
    else if(path.endsWith('/my_receipt_tables'))data=member===payer?receipts:[];
@@ -48,7 +49,7 @@ try{
  const host=await newPage();await login(host.page,payer.email);await host.page.getByText('HOLA, LUIS').waitFor();
  await host.page.getByRole('link',{name:/Rango Comerciante/}).waitFor();assert.equal(await host.page.getByRole('progressbar',{name:'Progreso del rango'}).getAttribute('aria-valuenow'),'10');
  assert.match(await host.page.locator('.hero-photo img').getAttribute('src'),/foto-junta-rey/);
- await host.page.getByRole('link',{name:'Mi código y mi mesa'}).click();await host.page.getByLabel('Personas en la mesa, incluyéndote').fill('5');await host.page.getByRole('button',{name:'Preparar código para caja'}).click();await host.page.getByText(checkoutCode,{exact:true}).waitFor();
+ await host.page.getByRole('link',{name:'Mi código y mi mesa'}).click();await host.page.locator('label.chip').filter({hasText:/^5$/}).click();await host.page.getByRole('button',{name:'Preparar código para caja'}).click();await host.page.getByText(checkoutCode,{exact:true}).waitFor();
  await host.page.goto(base+'/caja');await host.page.getByLabel('Código de socio o de mesa').fill(checkoutCode);await host.page.getByRole('button',{name:'Consultar',exact:true}).click();await host.page.getByText('Mesa de 5 personas',{exact:true}).waitFor();
  assert.equal(await host.page.getByLabel('Personas de la mesa').inputValue(),'5');await host.page.getByLabel('Folio de boleta',{exact:true}).fill('MESA-100000');await host.page.getByLabel('Total cobrado (con descuento)').fill('100000');await host.page.getByRole('button',{name:'Registrar y acreditar'}).click();await host.page.getByRole('status').filter({hasText:/Boleta registrada/}).waitFor();
  await host.page.goto(base+'/coronas');await host.page.getByRole('heading',{name:'LAS CORONAS DE TU MESA'}).waitFor();await host.page.getByText('$20.000 por persona',{exact:true}).waitFor();await host.page.getByRole('button',{name:'Copiar enlace',exact:true}).click();const shared=await host.page.evaluate(()=>navigator.clipboard.readText());assert.equal(shared,base+'/mesa?codigo='+shareToken);
