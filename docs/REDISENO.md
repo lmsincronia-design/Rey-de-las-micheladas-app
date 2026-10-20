@@ -7,7 +7,7 @@ Detalle de la investigación y las decisiones: `demos/rey-de-las-micheladas/inve
 - Tipografía: **Londrina Solid** (títulos y cifras) + **Barlow** (texto) + Kaushan Script (caligrafía del logo). Archivos locales en `public/fonts/`.
 - Íconos: **Phosphor** (MIT) en `src/icons.js`. Reposo *bold*, activo *fill*.
 - **Carta de socio** en el inicio, con el avance de rango; fichas como tickets; fotos de la carta en círculo con aro rojo.
-- **Insignias de rango vectoriales** (`crestSvg` en `src/ranks.js`). Para volver a las imágenes anteriores: `RANK_ART='imagen'`.
+- **Insignias de rango: se conservan las originales del Club** (imágenes en `public/assets/rangos/` y sus colores). Queda disponible una alternativa vectorial (`crestSvg`, con `RANK_ART='vector'` en `src/ranks.js`), pero NO se usa.
 - Mosaico de limones real (`public/assets/marca/limones.png`, período 418 px) como fondo con desvanecido y grano fino.
 - Ilustraciones propias (`public/assets/marca/{corona,lima,jarro}.svg`).
 - Barra de pestañas plana; se quitó el botón central flotante.

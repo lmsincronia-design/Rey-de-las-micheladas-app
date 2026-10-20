@@ -80,7 +80,8 @@ main.wrap{animation:view-in .24s ease-out both}
 .rank-strip .header-rank small{font:500 13px/1.2 var(--f-text);color:var(--muted)}
 
 /* ── Insignias (SVG propio) ── */
-.rank-badge{display:inline-block;flex:none;line-height:0}
+.rank-badge{display:inline-block;flex:none;line-height:0;object-fit:contain}
+img.rank-badge{filter:drop-shadow(0 6px 14px rgba(0,0,0,.55))}
 .rank-badge svg{display:block;width:100%;height:100%}
 .rank-badge.small{width:32px;height:32px}
 
@@ -328,18 +329,6 @@ input:focus,select:focus{outline:none;border-color:var(--yellow);box-shadow:0 0 
 .perks h2{font-size:28px;text-transform:uppercase}
 .perk-list li>span{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:rgba(252,202,9,.12);color:var(--yellow);font-size:0}
 .perk-list li>span .ic{width:24px;height:24px;vertical-align:baseline}
-
-/* Página de rangos */
-.rank-journey{display:flex;align-items:center;gap:18px;border-color:var(--rank-color)}
-.rank-journey .rank-badge{width:92px;height:92px}
-.rank-journey h2{font-size:34px;text-transform:uppercase;color:var(--rank-color)}
-.rank-grid{gap:10px}
-.rank{border-radius:var(--r-l)}
-.rank .rank-badge{width:84px;height:84px;margin:0 auto 10px;display:block}
-.rank h2{font-size:26px;text-transform:uppercase;margin-top:12px}
-.rank strong{font:900 44px/1 var(--f-display);color:var(--rank-color)}
-.rank.current{border-color:var(--rank-color);box-shadow:0 0 0 1px var(--rank-color) inset}
-.rank-number{font:900 18px var(--f-display);color:var(--muted)}
 
 /* ── Amigos ── */
 .friend{gap:12px;padding:14px 0;border-top:1px solid var(--line)}
