@@ -15,8 +15,8 @@
     "test:e2e": "node test/browser.mjs && node test/browser-tables.mjs"
   },
   "dependencies": {
+    "@phosphor-icons/core": "^2.1.1",
     "@supabase/supabase-js": "^2.117.2",
-    "lucide-static": "^1.59.0",
     "qrcode-generator": "^2.0.4"
   },
   "devDependencies": {

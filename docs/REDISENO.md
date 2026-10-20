@@ -1,23 +1,25 @@
-# Rediseño "app" (oct-2026)
+# Rediseño (v3, oct-2026): identidad real del Rey
 
-Objetivo: que el Club se sienta como una app de celular (no como un sitio web) y que insinúe, con sutileza, un reino.
+Detalle de la investigación y las decisiones: `demos/rey-de-las-micheladas/investigacion-diseno/README.md`.
 
-## Qué cambió
-- **Navegación:** barra de pestañas inferior con íconos y la corona de *Coronas* al centro; barra superior compacta (logo, avisos, perfil). El rango pasó a una tira bajo la barra.
-- **Inicio (socio):** "Tu tesoro" con el saldo y accesos grandes (Usar, Sumar, Regalar, Mi gente, La carta, Ranking, Mi código).
-- **Botones y formularios** pensados para el pulgar: ≥ 52 px de alto, texto de 16 px (evita el zoom de iPhone), efecto de pulsado.
-- **Íconos:** Lucide (ISC), empaquetados en `src/icons.js`; se eliminaron los emojis.
-- **Reino sutil:** etiquetas en Cinzel (tipografía de inscripción), corona-ornamento bajo cada título, trama heráldica casi invisible de fondo, escudos de rango, marca de agua de corona en el "tesoro".
-- **App instalable:** `viewport-fit=cover`, áreas seguras (notch), accesos directos del manifiesto (Coronas, Carta, Ranking).
+## Qué cambió respecto a la v2 (la publicada el 19-oct)
+- Paleta **del Rey**: negro `#020201`, amarillo `#FCCB09`, rojo `#F8393B`, lima del logo. Se eliminó el oliva y el lima ajenos a la marca.
+- Tipografía: **Londrina Solid** (títulos y cifras) + **Barlow** (texto) + Kaushan Script (caligrafía del logo). Archivos locales en `public/fonts/`.
+- Íconos: **Phosphor** (MIT) en `src/icons.js`. Reposo *bold*, activo *fill*.
+- **Carta de socio** en el inicio, con el avance de rango; fichas como tickets; fotos de la carta en círculo con aro rojo.
+- **Insignias de rango vectoriales** (`crestSvg` en `src/ranks.js`). Para volver a las imágenes anteriores: `RANK_ART='imagen'`.
+- Mosaico de limones real (`public/assets/marca/limones.png`, período 418 px) como fondo con desvanecido y grano fino.
+- Ilustraciones propias (`public/assets/marca/{corona,lima,jarro}.svg`).
+- Barra de pestañas plana; se quitó el botón central flotante.
 
 ## Archivos
-- `src/app.css` (nuevo, se carga después de `styles.css` y lo sobrescribe), `src/icons.js`, `public/fonts/cinzel-latin.woff2`, `public/assets/reino/*`.
-- Marcado: `shell()`, `home()`, `locationCards()` en `src/main.js`; íconos en `ranking.js`, `ranks.js`.
+`src/app.css` (sistema de diseño), `src/styles.css` (estructura y pantallas internas, con colores y fuentes migrados), `src/icons.js`, `src/ranks.js`, `src/main.js` (shell, inicio, locales), `src/ranking.js`.
 
-## Volver al diseño anterior
-Opción rápida (solo estilos): quitar `import './app.css'` de `src/main.js` (los marcados nuevos seguirán, pero con el CSS viejo).
-Opción completa: `git checkout ui-v1-antes-del-rediseno -- .` (tag con el diseño publicado el 13-oct-2026), o copiar `../_respaldo-club-antes-de-carta/ui-v1/`.
+## Volver atrás
+- Diseño v2 publicado el 19-oct: `git checkout ui-v2-app-rediseno -- .`
+- Diseño original (antes de cualquier rediseño): `git checkout ui-v1-antes-del-rediseno -- .`
+- Copias de archivos en `../_respaldo-club-antes-de-carta/ui-v1` y `ui-v2`.
 
-## Cómo ver las pantallas con datos de ejemplo
-`node test/capturas.mjs <carpeta> [ancho] [alto]` (Supabase simulado; `CAPTURA_ADMIN=1` agrega admin y caja).
-`node test/csp-check.mjs` verifica que el sitio compilado cumple la política de seguridad de `vercel.json`.
+## Pruebas y capturas
+`node test/capturas.mjs <carpeta> [ancho] [alto]` (datos de ejemplo; `CAPTURA_ADMIN=1` agrega admin y caja).
+`node test/csp-check.mjs` verifica la política de seguridad de `vercel.json` sobre el sitio compilado.

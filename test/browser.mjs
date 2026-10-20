@@ -93,7 +93,7 @@ try{
  await page.getByLabel('Cuenta de Martín').selectOption('ABCDEF123456');await page.getByLabel('Cuenta de Luis').selectOption('123456ABCDEF');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Preparar las cinco boletas'}).click();await page.getByRole('heading',{name:'Las cinco boletas'}).waitFor();assert.equal(balance,13000);
  await page.goto(base+'/coronas');await page.getByRole('tablist',{name:'¿Qué quieres hacer con tus coronas?'}).waitFor();
  // Tres pasos en el orden de una visita: usar (antes de la cuenta) → sumar (después de pagar) → regalar
- assert.deepEqual((await page.getByRole('tab').allTextContents()).map(s=>s.replace(/\s+/g,' ').trim()),['1 Usar mis coronasAntes de pedir la cuenta','2 Sumar mi compraDespués de pagar','3 Regalar a un amigoCuando quieras']);
+ assert.deepEqual((await page.getByRole('tab').allTextContents()).map(s=>s.replace(/\s+/g,' ').trim()),['1Usar mis coronasAntes de pedir la cuenta','2Sumar mi compraDespués de pagar','3Regalar a un amigoCuando quieras']);
  // Con saldo disponible se abre en "Usar"; "Sumar mi compra" no se ve hasta elegirlo
  assert.equal(await page.getByRole('tab',{name:/Usar mis coronas/}).getAttribute('aria-selected'),'true');
  assert.equal(await page.getByRole('heading',{name:'Ingresa tu boleta',exact:true}).isVisible(),false);

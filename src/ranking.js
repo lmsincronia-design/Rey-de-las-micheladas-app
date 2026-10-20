@@ -42,7 +42,7 @@ function podiumSlot(e,place){
  const t=tierOf(e.tier);
  const label=['Primer','Segundo','Tercer'][place-1];
  return `<article class="podium-slot p${place}${e.me?' is-me':''}" style="--rank-color:${t.color}" aria-label="${label} lugar: ${esc(who(e.name))}, ${t.name}">
-  <span class="podium-crown" aria-hidden="true">${icon(place===1?'crown':'medal')}</span>
+  <span class="podium-crown" aria-hidden="true">${place===1?'<img src="/assets/marca/corona.svg" alt="" width="72" height="60">':icon('medal','',true)}</span>
   <span class="podium-avatar" aria-hidden="true">${initial(e.name)}</span>
   <strong class="podium-name">${esc(who(e.name))}${e.me?' <em class="me-tag">TÚ</em>':''}</strong>
   <span class="podium-tier">${rankBadge(t).replace('class="rank-badge"','class="rank-badge small"')}<small>${t.name}</small></span>
