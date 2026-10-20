@@ -65,7 +65,7 @@ try{
  await page.getByLabel('Comuna',{exact:true}).selectOption('Santiago');assert.equal(calls.filter(c=>c.path.endsWith('/announce_location')).length,initial);
  // Stop external navigation at the browser boundary; verify the click invokes the notification RPC.
  await context.route('https://qrfy.io/**',r=>r.fulfill({status:200,contentType:'text/html',body:'<h1>Carta oficial (prueba)</h1>'}));
- const [cartaPopup]=await Promise.all([page.waitForEvent('popup'),page.getByRole('button',{name:'Abrir carta ↗'}).click()]);
+ const [cartaPopup]=await Promise.all([page.waitForEvent('popup'),page.getByRole('button',{name:/Ver la carta de Local de prueba/}).click()]);
  {const u=new URL(cartaPopup.url());assert.equal(u.pathname,'/carta/index.html');assert.equal(u.searchParams.get('from'),'club');assert.match(u.searchParams.get('local'),/Local de prueba/);await cartaPopup.close();}
  await page.getByRole('status').filter({hasText:/recibieron el aviso/}).waitFor();assert.equal(calls.filter(c=>c.path.endsWith('/announce_location')).length,initial+1);
  // Ranking: chip TOP junto al rango, podio real, tu posición y activar el nombre público
@@ -79,7 +79,7 @@ try{
  await page.getByRole('button',{name:'Ver ejemplo con perfiles ficticios'}).click();await page.getByText('VISTA DE EJEMPLO').waitFor();await page.getByText('Nacho R.').first().waitFor();
  await page.goto(base+'/amigos');await page.getByRole('heading',{name:'TU GENTE, EN EL CLUB.'}).waitFor();await page.getByRole('button',{name:'Silenciar a Luis'}).click();await page.getByText('Avisos de actividad silenciados').waitFor();assert.equal(muted,true);
  await page.getByLabel('Código de tu amigo').fill('123456ABCDEF');await page.getByRole('button',{name:'Enviar solicitud →'}).click();await page.getByRole('status').filter({hasText:/Solicitud enviada/}).waitFor();
- await page.getByRole('link',{name:'Enviar',exact:true}).click();await page.getByLabel('Coronas a enviar').fill('2000');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Enviar coronitas 👑'}).click();await page.getByRole('heading',{name:'♛ $3.000'}).waitFor();assert.equal(balance,3000);assert.equal(calls.filter(c=>c.path.endsWith('/transfer_crowns')).length,1);
+ await page.getByRole('link',{name:'Enviar',exact:true}).click();await page.getByLabel('Coronas a enviar').fill('2000');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Enviar coronas',exact:true}).click();await page.getByRole('heading',{name:'$3.000'}).waitFor();assert.equal(balance,3000);assert.equal(calls.filter(c=>c.path.endsWith('/transfer_crowns')).length,1);
  await mkdir('test/artifacts',{recursive:true});await page.screenshot({path:'test/artifacts/coronas-mobile.png',fullPage:true});
  for(const path of ['/','/locales','/amigos','/coronas','/perfil','/notificaciones','/codigo','/rangos','/ranking','/admin','/caja']){await page.goto(base+path);await page.locator('main h1').waitFor();await page.waitForTimeout(80);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Mobile overflow: '+path);}
  isAdmin=true;await page.goto(base+'/admin');await page.getByRole('heading',{name:'Acreditar coronas',exact:true}).waitFor();
@@ -88,17 +88,17 @@ try{
  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Acreditar coronas',exact:true}).click();await page.getByRole('status').filter({hasText:/coronas acreditadas/}).waitFor();assert.equal(balance,8000);
  await page.getByText('Ver últimas acreditaciones').click();await page.locator('#credit-history').getByText(/Prueba entre amigos/).waitFor();assert.equal(credits.length,1);
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Admin credit mobile overflow');await page.screenshot({path:'test/artifacts/admin-coronas-mobile.png',fullPage:true});
- await page.goto(base+'/coronas');await page.getByRole('heading',{name:'♛ $8.000'}).waitFor();
+ await page.goto(base+'/coronas');await page.getByRole('heading',{name:'$8.000'}).waitFor();
  await page.goto(base+'/pruebas');await page.getByRole('heading',{name:'Preparar Martín y Luis'}).waitFor();
  await page.getByLabel('Cuenta de Martín').selectOption('ABCDEF123456');await page.getByLabel('Cuenta de Luis').selectOption('123456ABCDEF');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Preparar las cinco boletas'}).click();await page.getByRole('heading',{name:'Las cinco boletas'}).waitFor();assert.equal(balance,13000);
  await page.goto(base+'/coronas');await page.getByRole('tablist',{name:'¿Qué quieres hacer con tus coronas?'}).waitFor();
  // Tres pasos en el orden de una visita: usar (antes de la cuenta) → sumar (después de pagar) → regalar
- assert.deepEqual(await page.getByRole('tab').allTextContents().then(x=>x.map(s=>s.replace(/s+/g,' ').trim())),['1♛Usar mis coronasAntes de pedir la cuenta','2🧾Sumar mi compraDespués de pagar','3🎁Regalar a un amigoCuando quieras'].map(s=>s.replace(/s+/g,' ').trim()));
+ assert.deepEqual((await page.getByRole('tab').allTextContents()).map(s=>s.replace(/\s+/g,' ').trim()),['1 Usar mis coronasAntes de pedir la cuenta','2 Sumar mi compraDespués de pagar','3 Regalar a un amigoCuando quieras']);
  // Con saldo disponible se abre en "Usar"; "Sumar mi compra" no se ve hasta elegirlo
  assert.equal(await page.getByRole('tab',{name:/Usar mis coronas/}).getAttribute('aria-selected'),'true');
  assert.equal(await page.getByRole('heading',{name:'Ingresa tu boleta',exact:true}).isVisible(),false);
  await page.getByText('Hazlo antes de pedir la cuenta.').waitFor();
- const walletOrder=await page.locator('.balance-card h2,.wallet-actions h2').allTextContents();assert.deepEqual(walletOrder,['♛ $13.000','Usarlas en una junta','Ingresa tu boleta','Coronas para un amigo']);
+ const walletOrder=(await page.locator('.balance-card h2,.wallet-actions h2').allTextContents()).map(s=>s.trim());assert.deepEqual(walletOrder,['$13.000','Usarlas en una junta','Ingresa tu boleta','Coronas para un amigo']);
  await page.getByRole('tab',{name:/Sumar mi compra/}).click();await page.getByText('Hazlo después de pagar.').waitFor();await page.getByRole('heading',{name:'Ingresa tu boleta',exact:true}).waitFor();
  assert.equal(await page.getByRole('heading',{name:'Usarlas en una junta',exact:true}).isVisible(),false);
  assert.match(page.url(),/tab=sumar/);

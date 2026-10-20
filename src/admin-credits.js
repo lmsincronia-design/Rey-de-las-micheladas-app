@@ -55,7 +55,7 @@ export function bindAdminCredits({run,toast,members,onCredit}) {
       }
       // Reset only after a confirmed response. Retrying a failed request keeps its UUID.
       requestId=crypto.randomUUID();lastRequest='';form.reset();
-      toast(result.already_applied?'Esa acreditación ya estaba aplicada.':`${money(amount)} en coronas acreditadas 👑`);
+      toast(result.already_applied?'Esa acreditación ya estaba aplicada.':`${money(amount)} en coronas acreditadas.`);
       await onCredit();
     });
   };

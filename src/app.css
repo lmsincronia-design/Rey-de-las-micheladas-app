@@ -1,0 +1,264 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Club del Rey · rediseño "app" (oct-2026)
+   Se carga DESPUÉS de styles.css y lo sobrescribe. Para volver al diseño anterior:
+   quitar `import './app.css'` de src/main.js (el diseño anterior queda en styles.css,
+   en el tag git `ui-v1-antes-del-rediseno` y en _respaldo-club-antes-de-carta/ui-v1/).
+   Idea: una app móvil, con botones grandes, y un reino insinuado (inscripciones, coronas, escudos) sin disfraz.
+   ─────────────────────────────────────────────────────────────────────────── */
+@font-face{font-family:Cinzel;src:url('/fonts/cinzel-latin.woff2') format('woff2');font-weight:500 700;font-display:swap}
+
+:root{
+ --bg:#0e0f0b;--bar:#10120c;--panel:#171a12;--panel2:#1e2216;--line:#2d3223;
+ --gold:#f8d34c;--gold-deep:#a67f12;--gold-line:rgba(248,211,76,.22);--ink:#f2f0e2;--muted:#a9ad9b;
+ --f-ins:Cinzel,'Times New Roman',serif;
+ --tab-h:68px;--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px);
+ --yellow:#f8d34c;--panel-old:#1d2018;
+ color-scheme:dark;
+}
+html{scroll-padding-top:72px}
+body{background:var(--bg) url(/assets/reino/trama.svg) 50% 0/120px;color:var(--ink);-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none;min-height:100dvh}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(70% 38% at 50% 0,rgba(248,211,76,.10),transparent 70%)}
+a,button,label,input,select{touch-action:manipulation}
+p{line-height:1.6}
+.wrap{padding-left:16px;padding-right:16px}
+main.wrap{padding-bottom:12px;animation:view-in .22s ease-out both}
+@keyframes view-in{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){main.wrap{animation:none}}
+
+/* ── Inscripciones: el "reino" aparece en las etiquetas pequeñas ── */
+.eyebrow{font-family:var(--f-ins);font-weight:600;font-size:12px;letter-spacing:.2em;color:var(--gold);margin:0 0 12px;text-transform:uppercase}
+.page-heading{margin:22px 0 20px;max-width:none}
+.page-heading h1{font-size:clamp(30px,8.6vw,46px);line-height:1.08;letter-spacing:.01em}
+.page-heading .muted{font-size:15px;line-height:1.6;margin-top:12px}
+.page-heading::after{content:"";display:block;height:16px;margin-top:16px;
+ background:url(/assets/reino/corona-marca.svg) left center/15px no-repeat,linear-gradient(90deg,rgba(248,211,76,.6),transparent) 26px 50%/150px 1px no-repeat}
+.section-title h2,.section h2{letter-spacing:.03em}
+.ic{width:1.15em;height:1.15em;flex:none;vertical-align:-.18em}
+
+/* ── Barra superior compacta ── */
+.topbar{background:rgba(14,15,11,.9);-webkit-backdrop-filter:saturate(1.3) blur(14px);backdrop-filter:saturate(1.3) blur(14px);border-bottom:1px solid var(--gold-line);padding-top:var(--safe-t)}
+.top-inner{height:56px}
+.brand{gap:10px}
+.brand img{width:36px;height:36px;box-shadow:0 0 0 1.5px rgba(248,211,76,.55)}
+.brand>span{font-size:19px;letter-spacing:.06em}
+.brand>span>span{font-size:12px;letter-spacing:.22em;margin-top:3px;color:var(--gold)}
+.top-actions{gap:10px}
+.top-actions .bell,.top-actions .avatar{width:44px;height:44px;min-width:44px;border-radius:50%;background:var(--panel);border:1px solid var(--gold-line);display:grid;place-items:center;position:relative;color:var(--ink);margin:0;font-family:Anton;font-size:19px}
+.top-actions .bell .ic{width:22px;height:22px}
+.top-actions .bell:active,.top-actions .avatar:active{transform:scale(.94)}
+.bell .badge{right:-3px;top:-3px;min-width:20px;font-size:12px;padding:2px 4px;border:2px solid var(--bg)}
+
+/* ── Tu rango: tira bajo la barra ── */
+.rank-strip{margin:14px 0 0}
+.rank-strip .header-rank{display:flex;width:100%;min-width:0;max-width:520px;padding:8px 14px 8px 8px;gap:10px;border-radius:18px;animation:none}
+.rank-strip .header-rank .rank-badge{width:52px;height:52px;flex:none}
+.rank-strip .header-rank-info{gap:6px}
+.rank-strip .header-rank strong{font-size:19px}
+.rank-strip .header-rank small{font-size:13px}
+.header-top{display:inline-flex;align-items:center;gap:3px}
+.header-top .ic{width:12px;height:12px}
+
+/* ── Barra de pestañas (la navegación de una app) ── */
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;transform:none;width:100%;max-width:none;border:0;border-top:1px solid var(--gold-line);border-radius:0;background:var(--bar);-webkit-backdrop-filter:none;backdrop-filter:none;
+ display:grid;grid-template-columns:repeat(5,1fr);align-items:end;padding:6px 6px calc(6px + var(--safe-b));z-index:40;box-shadow:0 -10px 30px rgba(0,0,0,.35)}
+.bottom-nav a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:56px;padding:6px 2px 4px;border-radius:14px;color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.01em;transition:color .15s}
+.bottom-nav a:active{background:rgba(248,211,76,.08)}
+.nav-ic .ic{width:24px;height:24px;display:block}
+.bottom-nav a.active{color:var(--gold);background:none}
+.bottom-nav a.active::before{content:"";position:absolute;top:-7px;left:50%;width:30px;height:3px;margin-left:-15px;border-radius:0 0 4px 4px;background:var(--gold)}
+.bottom-nav a.nav-main{margin-top:-30px;gap:5px}
+.nav-main .nav-ic{display:grid;place-items:center;width:62px;height:62px;border-radius:50%;color:#1a1608;background:radial-gradient(circle at 35% 25%,#ffec9a,#f8d34c 52%,#cf9f1d);box-shadow:0 0 0 5px var(--bar),0 0 0 6.5px var(--gold-line),0 10px 22px rgba(0,0,0,.55);transition:transform .15s}
+.nav-main .nav-ic .ic{width:30px;height:30px;fill:currentColor;fill-opacity:.18}
+.nav-main:active .nav-ic{transform:scale(.94)}
+.bottom-nav a.nav-main.active::before{display:none}
+.bottom-nav a.nav-main.active .nav-lb{color:var(--gold)}
+.footer{padding-bottom:calc(var(--tab-h) + 34px + var(--safe-b));font-size:13px}
+@media(min-width:1000px){
+ .bottom-nav{left:50%;right:auto;transform:translateX(-50%);width:min(560px,92vw);bottom:16px;border:1px solid var(--gold-line);border-radius:22px;padding-bottom:6px}
+ .footer{padding-bottom:110px}
+}
+
+/* ── Botones con peso: se sienten pulsados ── */
+.btn{min-height:52px;padding:0 22px;border-radius:14px;font-size:16px;font-weight:800;gap:9px;letter-spacing:.005em;text-decoration:none;transition:transform .08s,box-shadow .08s,background .15s,border-color .15s}
+.btn:not(.secondary):not(.danger){background:linear-gradient(180deg,#ffe27a,#f8d34c 60%,#efc23a);border:1px solid #e4b832;color:#1a1608;box-shadow:0 3px 0 var(--gold-deep),0 10px 20px rgba(248,211,76,.12)}
+.btn:not(.secondary):not(.danger):hover{background:linear-gradient(180deg,#ffe98f,#fadb5b 60%,#f2c943);transform:none}
+.btn:not(.secondary):not(.danger):active{transform:translateY(3px);box-shadow:0 0 0 var(--gold-deep)}
+.btn.secondary{background:rgba(248,211,76,.05);border:1.5px solid rgba(248,211,76,.38);color:var(--ink)}
+.btn.secondary:hover{background:rgba(248,211,76,.1);border-color:var(--gold)}
+.btn.secondary:active{transform:scale(.98);background:rgba(248,211,76,.14)}
+.btn.small{min-height:44px;padding:0 16px;font-size:15px;border-radius:12px}
+.btn.danger{min-height:52px;border-radius:14px}
+.btn .ic{width:20px;height:20px}
+.text-link{display:inline-flex;align-items:center;min-height:44px;color:var(--gold);font-weight:800}
+.icon-btn{width:44px;height:44px;min-width:44px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);display:inline-grid;place-items:center;padding:0}
+.icon-btn:active{transform:scale(.92)}
+.icon-btn .ic{width:20px;height:20px}
+.actions{gap:10px}
+
+/* ── Formularios cómodos con el pulgar (16px evita el zoom de iPhone) ── */
+label:not(.check){font-size:14px;gap:8px;color:#e1e4d2}
+input:not([type=checkbox]):not([type=radio]),select{min-height:54px;border-radius:14px;font-size:16px;padding:0 16px;background:#0f120b;border:1.5px solid #3a402b}
+select{appearance:none;-webkit-appearance:none;padding-right:44px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23f8d34c' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+input:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(248,211,76,.18)}
+.check{font-size:15px;line-height:1.5;gap:12px}
+.check input{width:22px;height:22px;margin-top:0}
+.filters{align-items:stretch;flex-wrap:wrap;gap:10px}
+.filters label{min-width:0;flex:1 1 200px}
+.filters .btn{min-height:54px}
+
+/* ── Paneles ── */
+.panel,.source-card{background:linear-gradient(180deg,#1a1d14,#151810);border:1px solid var(--line);border-top-color:rgba(248,211,76,.2);border-radius:20px;padding:20px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.panel h2{font-size:22px;margin-bottom:10px}
+.pill{font-family:Jakarta,Arial,sans-serif;font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--gold);border:1px solid var(--gold-line);background:rgba(248,211,76,.06);padding:5px 10px}
+.hint{font-size:14px!important;line-height:1.65}
+
+/* ── Estados vacíos ── */
+.empty{border:1px dashed #3d4330;border-radius:20px;background:rgba(255,255,255,.015)}
+.empty>span{display:grid;place-items:center;width:56px;height:56px;margin:0 auto 14px;border-radius:50%;border:1px solid var(--gold-line);background:rgba(248,211,76,.06);color:var(--gold);font-size:inherit}
+.empty>span .ic{width:26px;height:26px}
+
+/* ── Inicio (socio): tesoro + accesos grandes ── */
+.dash .eyebrow{margin:20px 0 12px}
+.treasure{position:relative;overflow:hidden;border-radius:24px;padding:22px 20px 20px;border:1px solid rgba(248,211,76,.4);background:radial-gradient(120% 150% at 100% 0%,#506224 0%,#28321a 46%,#171a11 100%);box-shadow:0 14px 36px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.07)}
+.treasure::after{content:"";position:absolute;right:-30px;top:-26px;width:190px;height:190px;background:url(/assets/reino/corona-marca.svg) center/contain no-repeat;opacity:.1;transform:rotate(12deg);pointer-events:none}
+.treasure>*{position:relative;z-index:1}
+.treasure-k{font-family:var(--f-ins);font-weight:600;font-size:12px;letter-spacing:.22em;color:#e4eccb;margin:0}
+.treasure-n{display:flex;align-items:center;gap:10px;margin:8px 0 6px;font-family:Anton;font-weight:400;font-size:56px;line-height:1;letter-spacing:.01em;color:var(--gold)}
+.treasure-n .ic{width:38px;height:38px;fill:currentColor;fill-opacity:.2}
+.treasure-s{margin:0 0 18px;color:#dfe7c8;font-size:15px}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.q-tile{display:flex;flex-direction:column;gap:3px;min-height:122px;padding:16px 14px 14px;border-radius:20px;background:linear-gradient(180deg,#1a1d14,#151810);border:1px solid var(--line);border-top-color:rgba(248,211,76,.18);transition:transform .12s,border-color .15s;text-decoration:none}
+.q-tile:active{transform:scale(.97);border-color:var(--gold)}
+.q-ic{display:grid;place-items:center;width:46px;height:46px;margin-bottom:9px;border-radius:14px;color:var(--gold);background:rgba(248,211,76,.1);border:1px solid var(--gold-line)}
+.q-ic .ic{width:24px;height:24px}
+.q-tile strong{font-size:16px;line-height:1.2}
+.q-tile small{color:var(--muted);font-size:13px;line-height:1.4}
+.q-wide{grid-column:1/-1;flex-direction:row;align-items:center;min-height:78px;gap:14px;padding:14px 16px}
+.q-wide .q-ic{margin:0;flex:none}
+.q-tx{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.q-go{width:22px;height:22px;color:var(--gold)}
+.section{margin:30px 0}
+
+/* ── Locales: filas táctiles (y carrusel en el inicio) ── */
+.location-grid{display:grid;grid-template-columns:1fr;gap:12px}
+.location-card{display:flex;align-items:center;gap:14px;padding:14px;border-radius:20px;background:linear-gradient(180deg,#1a1d14,#151810);border:1px solid var(--line)}
+.loc-ic{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:14px;color:var(--gold);background:rgba(248,211,76,.1);border:1px solid var(--gold-line)}
+.loc-ic .ic{width:24px;height:24px}
+.loc-body{flex:1;min-width:0}
+.location-card h3{font-size:16px;line-height:1.25;margin:7px 0 3px}
+.location-card p{margin:0;min-height:0;font-size:13px;line-height:1.4;color:var(--muted)}
+.location-card .btn{flex:none;min-height:44px;padding:0 14px;font-size:14px;border-radius:12px}
+@media(min-width:700px){.location-grid{grid-template-columns:1fr 1fr}}
+.location-grid.rail{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:2px 16px 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.location-grid.rail::-webkit-scrollbar{display:none}
+.rail .location-card{flex:0 0 78%;max-width:320px;scroll-snap-align:start;flex-direction:column;align-items:flex-start;gap:10px}
+.rail .location-card .btn{width:100%}
+@media(min-width:700px){.location-grid.rail{margin:0;padding-left:0;padding-right:0}.rail .location-card{flex-basis:300px}}
+
+/* ── Portada de visitante, más compacta ── */
+.hero{padding:22px 0 16px;gap:22px}
+.hero h1{font-size:clamp(46px,13.4vw,72px);line-height:1.04}
+.hero-copy>p:not(.eyebrow){margin:18px 0}
+.hero .actions .btn{flex:1 1 150px}
+.hero-photo{height:min(340px,64vw);border-radius:26px}
+.hero-caption{gap:18px;flex-wrap:wrap}
+.hero-caption span{display:inline-flex;align-items:center;gap:6px}
+.hero-caption .ic{color:var(--gold)}
+.join-banner{border-radius:22px;border-color:rgba(248,211,76,.35)}
+.steps{gap:22px}
+
+/* ── Coronas ── */
+.balance-card{border-radius:22px;border-color:rgba(248,211,76,.35);padding:22px 20px;flex-direction:column;align-items:flex-start;gap:6px;position:relative;overflow:hidden;background:radial-gradient(120% 150% at 100% 0%,#506224 0%,#28321a 46%,#171a11 100%)}
+.balance-card::after{content:"";position:absolute;right:-30px;top:-26px;width:170px;height:170px;background:url(/assets/reino/corona-marca.svg) center/contain no-repeat;opacity:.1;transform:rotate(12deg);pointer-events:none}
+.balance-card>*{position:relative;z-index:1}
+.balance-card h2{display:flex;align-items:center;gap:10px;font-family:Anton;font-weight:400;font-size:48px;line-height:1.05;margin:4px 0}
+.balance-card h2 .ic{width:34px;height:34px;fill:currentColor;fill-opacity:.2}
+.coin-tabs{gap:10px;margin:20px 0 16px}
+.coin-tabs button{border-radius:18px;min-height:112px;padding:14px 12px;background:linear-gradient(180deg,#1a1d14,#151810)}
+.coin-tabs button:active{transform:scale(.97)}
+.coin-icon{color:var(--gold);font-size:inherit}
+.coin-icon .ic{width:26px;height:26px}
+.coin-tabs button[aria-selected=true]{background:radial-gradient(130% 120% at 100% 0%,#4d5f22 0%,#27311a 70%)}
+.when{font-size:15px;border-radius:12px}
+.chip{border-radius:14px}
+
+/* ── Amigos ── */
+.friend{gap:12px;padding:14px 0}
+.friend .avatar,.avatar{font-family:Anton;font-size:19px;color:var(--gold);background:rgba(248,211,76,.1);border:1px solid var(--gold-line)}
+.friend .avatar{width:46px;height:46px}
+.friend-actions{gap:8px}
+.code{font-family:var(--f-ins);font-weight:700;font-size:24px;letter-spacing:.14em}
+
+/* ── Avisos ── */
+.notification{gap:14px;padding:14px;border-radius:18px;background:linear-gradient(180deg,#1a1d14,#151810)}
+.notification.unread{border-color:rgba(248,211,76,.45);border-left-width:4px;background:linear-gradient(90deg,rgba(248,211,76,.09),#171a12 45%)}
+.n-ic{display:grid;place-items:center;flex:none;width:42px;height:42px;border-radius:12px;color:var(--gold);background:rgba(248,211,76,.1);border:1px solid var(--gold-line);font-size:inherit}
+.n-ic .ic{width:22px;height:22px}
+.notification>span:not(.n-ic){font-size:inherit}
+
+/* ── Perfil ── */
+.profile-panel{max-width:none}
+.profile-panel .avatar.large{width:84px;height:84px;font-size:36px;margin-bottom:14px;border-width:2px;box-shadow:0 0 0 5px rgba(248,211,76,.08)}
+.profile-panel dl{display:block;margin:18px 0}
+.profile-panel dt{margin-top:16px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.profile-panel dd{padding-bottom:12px;border-bottom:1px solid var(--line);font-size:17px}
+.profile-panel .actions .btn{flex:1 1 100%}
+
+/* ── Ranking y rangos ── */
+.podium-crown .ic{width:36px;height:36px}
+.p1 .podium-crown .ic{width:48px;height:48px;color:#f8d34c;fill:currentColor;fill-opacity:.22}
+.p2 .podium-crown .ic{color:#d7dee6}
+.p3 .podium-crown .ic{color:#e3a15c}
+.podium-crown{display:grid;place-items:center;filter:none}
+.p1 .podium-crown{filter:drop-shadow(0 4px 14px rgba(248,211,76,.4))}
+.my-spot h2 .ic{width:34px;height:34px;margin-right:6px;color:var(--gold);fill:currentColor;fill-opacity:.2;vertical-align:-.12em}
+.perk-list li>span .ic{width:28px;height:28px;color:var(--gold)}
+.perk-list li>span{font-size:inherit}
+.rank-designed{border-radius:20px}
+
+/* ── Aviso emergente (arriba de la barra de pestañas) ── */
+#toast{bottom:calc(var(--tab-h) + var(--safe-b) + 22px);border-radius:16px;background:#eef5cf;border-left:5px solid var(--gold);padding:14px 20px;font-size:15px;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+#toast.error{background:#f9d6c4;border-left-color:#d4553a}
+
+/* ── Pantallas angostas ── */
+@media(max-width:380px){
+ .treasure-n{font-size:48px}
+ .quick{gap:10px}
+ .q-tile{padding:14px 12px}
+ .brand>span{font-size:17px}
+}
+@media(min-width:900px){
+ .quick{grid-template-columns:repeat(3,1fr)}
+ .q-wide{grid-column:span 3}
+ .page-heading h1{font-size:clamp(40px,5vw,60px)}
+}
+
+/* Barra de pestañas: anular tamaños heredados del diseño anterior */
+.bottom-nav a span{font-size:inherit;line-height:1.1}
+.bottom-nav a .nav-ic{display:grid;place-items:center;font-size:0;line-height:0}
+.bottom-nav a .nav-lb{display:block;font-size:12px;line-height:1.1;font-weight:700;white-space:nowrap}
+.bottom-nav a.nav-main .nav-ic{font-size:0}
+
+/* Encabezados de página más compactos */
+.page-heading{margin:16px 0 16px}
+.page-heading h1{font-size:clamp(30px,8.2vw,42px)}
+.page-heading .muted{font-size:14.5px;margin-top:10px}
+.page-heading::after{margin-top:12px}
+
+/* Saludo del inicio y banner de marca */
+.dash-title{font-size:clamp(34px,10vw,48px);line-height:1.05;margin:0 0 16px;font-weight:400}
+.dash-title em{font-style:normal;color:var(--gold)}
+.dash .eyebrow{margin:18px 0 6px}
+.plan-photo{height:200px;margin:8px 0 12px;border-radius:22px}
+.plan-photo img{object-position:50% 38%}
+.dash-title{font-family:Anton}
+.location-grid.rail{scroll-padding-left:16px}
+@media(min-width:700px){.location-grid.rail{scroll-padding-left:0}}
+.wrap{max-width:1000px}
+
+/* Formularios: botones de ancho completo, fáciles de tocar */
+#friend-form{display:grid;gap:10px}
+#friend-form .btn{width:100%}
+#friend-form label{margin-bottom:4px}
+.friend-info{min-width:0;flex:1}
+.friend-info strong{display:block;font-size:16px}

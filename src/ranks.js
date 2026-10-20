@@ -12,12 +12,14 @@ export function rankProgress(spending=0){
  const tier=TIERS[index],next=TIERS[index+1];
  return {tier,next,index,spending:value,percent:next?Math.min(100,Math.max(0,(value-tier.threshold)/(next.threshold-tier.threshold)*100)):100,remaining:next?Math.max(0,next.threshold-value):0};
 }
+// Corona de Lucide (ISC) en línea: este módulo se prueba en Node, donde no se pueden importar los SVG de icons.js.
+const CROWN='<svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d=\"M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z\" /><path d=\"M5 21h14\" /></svg>';
 // Chip "TOP 27" junto al rango (lo calcula la base; vacío si el ranking aún no está disponible).
 function topChipHtml(r){
  const p=r?.me?.position;
  if(!p)return '';
  const top=p<=(r.limit||10);
- return `<span class="header-top${top?' is-top':''}" title="Tu puesto en el ranking del Club"><span class="sr-only">Ranking: puesto </span>${top?'👑 ':''}TOP ${p}</span>`;
+ return `<span class="header-top${top?' is-top':''}" title="Tu puesto en el ranking del Club"><span class="sr-only">Ranking: puesto </span>${top?CROWN:''}TOP ${p}</span>`;
 }
 export function rankBadge(tier){
  return `<img class="rank-badge" src="/assets/rangos/${tier.img}.webp" alt="" width="120" height="120" decoding="async" style="--rank-color:${tier.color}">`;

@@ -3,16 +3,17 @@
 import {rpc} from './api.js';
 import {esc,money} from './domain.js';
 import {TIERS,rankBadge,rankProgress} from './ranks.js';
+import {icon} from './icons.js';
 
 // Premios del Top 10: se definen en la reunión. Formato: {icon:'🍺',title:'Michelada gratis al mes',text:'…'}.
 // Mientras esté vacío la pantalla dice "Pronto anunciaremos los premios".
-export const BENEFICIOS_TOP10=[];
+export const BENEFICIOS_TOP10=[]; // cada premio: {icon:'beer'|'crown'|'party'|'gift'|…,title,text}  (nombres de src/icons.js)
 
 // Ideas SOLO para la vista de ejemplo (a definir con el dueño). Nunca se muestran como beneficio real.
 const IDEAS_EJEMPLO=[
- {icon:'🍺',title:'Michelada de cortesía cada mes',text:'Para los 10 del Top.'},
- {icon:'👑',title:'Mesa preferente',text:'Reserva prioritaria en tus locales favoritos.'},
- {icon:'🎂',title:'Cumpleaños del Rey',text:'Tu junta de cumpleaños con beneficio especial.'}
+ {icon:'beer',title:'Michelada de cortesía cada mes',text:'Para los 10 del Top.'},
+ {icon:'crown',title:'Mesa preferente',text:'Reserva prioritaria en tus locales favoritos.'},
+ {icon:'party',title:'Cumpleaños del Rey',text:'Tu junta de cumpleaños con beneficio especial.'}
 ];
 
 // ── Perfiles FICTICIOS para mostrar cómo se vería. No existen en la base de datos. ──
@@ -41,7 +42,7 @@ function podiumSlot(e,place){
  const t=tierOf(e.tier);
  const label=['Primer','Segundo','Tercer'][place-1];
  return `<article class="podium-slot p${place}${e.me?' is-me':''}" style="--rank-color:${t.color}" aria-label="${label} lugar: ${esc(who(e.name))}, ${t.name}">
-  <span class="podium-crown" aria-hidden="true">${place===1?'👑':place===2?'🥈':'🥉'}</span>
+  <span class="podium-crown" aria-hidden="true">${icon(place===1?'crown':'medal')}</span>
   <span class="podium-avatar" aria-hidden="true">${initial(e.name)}</span>
   <strong class="podium-name">${esc(who(e.name))}${e.me?' <em class="me-tag">TÚ</em>':''}</strong>
   <span class="podium-tier">${rankBadge(t).replace('class="rank-badge"','class="rank-badge small"')}<small>${t.name}</small></span>
@@ -69,7 +70,7 @@ function myCard(r,{wallet,demo}){
  return `<section class="panel my-spot${top?' is-top':''}" style="--rank-color:${t.color}" aria-labelledby="my-spot-t">
   <p class="eyebrow">TU POSICIÓN ${tag}</p>
   <div class="my-spot-main">${rankBadge(t)}<div>
-   <h2 id="my-spot-t">${top?'👑 ':''}TOP ${me.position}<small> de ${r.total}</small></h2>
+   <h2 id="my-spot-t">${top?icon('crown'):''}TOP ${me.position}<small> de ${r.total}</small></h2>
    <p class="my-tier">${t.name} · ${t.pct}% de vuelta</p>
   </div></div>
   ${top?`<p>${me.position===1?'¡Eres el número 1 del Club!':'¡Estás en el Top '+(r.limit||10)+'!'} Sigue sumando para defender tu lugar.</p>`
@@ -81,7 +82,7 @@ function benefitsCard(demo){
  const items=BENEFICIOS_TOP10.length?BENEFICIOS_TOP10:(demo?IDEAS_EJEMPLO:[]);
  const real=BENEFICIOS_TOP10.length>0;
  return `<section class="panel perks" aria-labelledby="perks-t"><p class="eyebrow">PREMIOS DEL TOP ${10}</p><h2 id="perks-t">${items.length?'LO QUE GANA EL TOP':'MUY PRONTO'}</h2>
-  ${items.length?`<ul class="perk-list">${items.map(i=>`<li><span aria-hidden="true">${i.icon}</span><div><strong>${esc(i.title)}</strong><p>${esc(i.text)}</p></div></li>`).join('')}</ul>`
+  ${items.length?`<ul class="perk-list">${items.map(i=>`<li><span aria-hidden="true">${icon(i.icon)}</span><div><strong>${esc(i.title)}</strong><p>${esc(i.text)}</p></div></li>`).join('')}</ul>`
    :'<p>Estamos definiendo los premios para quienes lleguen al Top 10. ¡Ve subiendo desde ya!</p>'}
   ${!real&&items.length?'<p class="hint">Ideas de ejemplo para conversar: los premios reales se definen con El Rey.</p>':''}
  </section>`;

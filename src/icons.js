@@ -1,0 +1,57 @@
+// Íconos de Lucide (https://lucide.dev, licencia ISC), importados como texto SVG y empaquetados con la app (sin red).
+import bell_off from 'lucide-static/icons/bell-off.svg?raw';
+import crown from 'lucide-static/icons/crown.svg?raw';
+import home from 'lucide-static/icons/house.svg?raw';
+import carta from 'lucide-static/icons/book-open.svg?raw';
+import users from 'lucide-static/icons/users.svg?raw';
+import trophy from 'lucide-static/icons/trophy.svg?raw';
+import bell from 'lucide-static/icons/bell.svg?raw';
+import qr from 'lucide-static/icons/qr-code.svg?raw';
+import gift from 'lucide-static/icons/gift.svg?raw';
+import receipt from 'lucide-static/icons/receipt-text.svg?raw';
+import ticket from 'lucide-static/icons/ticket.svg?raw';
+import coins from 'lucide-static/icons/coins.svg?raw';
+import beer from 'lucide-static/icons/beer.svg?raw';
+import chevron from 'lucide-static/icons/chevron-right.svg?raw';
+import plus from 'lucide-static/icons/plus.svg?raw';
+import share from 'lucide-static/icons/share-2.svg?raw';
+import copy from 'lucide-static/icons/copy.svg?raw';
+import scan from 'lucide-static/icons/scan-line.svg?raw';
+import pin from 'lucide-static/icons/map-pin.svg?raw';
+import search from 'lucide-static/icons/search.svg?raw';
+import user from 'lucide-static/icons/user.svg?raw';
+import logout from 'lucide-static/icons/log-out.svg?raw';
+import shield from 'lucide-static/icons/shield-check.svg?raw';
+import sparkles from 'lucide-static/icons/sparkles.svg?raw';
+import medal from 'lucide-static/icons/medal.svg?raw';
+import flame from 'lucide-static/icons/flame.svg?raw';
+import star from 'lucide-static/icons/star.svg?raw';
+import wallet from 'lucide-static/icons/wallet.svg?raw';
+import scroll from 'lucide-static/icons/scroll-text.svg?raw';
+import check from 'lucide-static/icons/check.svg?raw';
+import x from 'lucide-static/icons/x.svg?raw';
+import back from 'lucide-static/icons/arrow-left.svg?raw';
+import arrow from 'lucide-static/icons/arrow-right.svg?raw';
+import lock from 'lucide-static/icons/lock.svg?raw';
+import help from 'lucide-static/icons/circle-help.svg?raw';
+import info from 'lucide-static/icons/info.svg?raw';
+import clock from 'lucide-static/icons/clock.svg?raw';
+import party from 'lucide-static/icons/party-popper.svg?raw';
+import swords from 'lucide-static/icons/swords.svg?raw';
+import castle from 'lucide-static/icons/castle.svg?raw';
+import gem from 'lucide-static/icons/gem.svg?raw';
+import send from 'lucide-static/icons/send.svg?raw';
+import handcoins from 'lucide-static/icons/hand-coins.svg?raw';
+import banknote from 'lucide-static/icons/banknote.svg?raw';
+import utensils from 'lucide-static/icons/utensils.svg?raw';
+import heart from 'lucide-static/icons/heart-handshake.svg?raw';
+import settings from 'lucide-static/icons/settings.svg?raw';
+const SET={'bell-off':bell_off,crown,home,carta,users,trophy,bell,qr,gift,receipt,ticket,coins,beer,chevron,plus,share,copy,scan,pin,search,user,logout,shield,sparkles,medal,flame,star,wallet,scroll,check,x,back,arrow,lock,help,info,clock,party,swords,castle,gem,send,handcoins,banknote,utensils,heart,settings};
+const clean=s=>s.replace(/<!--[sS]*?-->/g,'').replace(/s(width|height|class)="[^"]*"/g,'').replace('<svg','<svg aria-hidden="true" focusable="false"').trim();
+const cache={};
+// icon('crown','clase-extra') → <svg class="ic …">; el tamaño lo da el CSS (1em por defecto)
+export function icon(name,cls=''){
+  const raw=SET[name];if(!raw)return '';
+  cache[name]=cache[name]||clean(raw);
+  return cache[name].replace('<svg','<svg class="ic'+(cls?' '+cls:'')+'"');
+}

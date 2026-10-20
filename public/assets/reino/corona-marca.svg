@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" fill="none">
+  <g transform="translate(100 100)" fill="#f8d34c">
+    <path d="M-80 50 -88 -50 -44 -10 0 -78 44 -10 88 -50 80 50Z"/>
+    <rect x="-80" y="62" width="160" height="20" rx="8"/>
+    <circle cx="-88" cy="-58" r="11"/><circle cx="0" cy="-86" r="12"/><circle cx="88" cy="-58" r="11"/>
+  </g>
+</svg>
