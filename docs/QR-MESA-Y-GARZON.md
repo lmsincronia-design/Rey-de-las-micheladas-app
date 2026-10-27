@@ -22,7 +22,7 @@ Reemplaza a los enlaces para repartir la mesa y a las fichas de descuento reserv
 
 1. Mientras la mesa pide, el garzón pregunta quién usará coronas. Quien no tiene la app la instala y se registra (nombre, apellido, correo y fecha de nacimiento; **sin RUT**; celular opcional).
 2. **Canje (antes de la cuenta):** el socio elige el monto en *Coronas → Usar* y muestra su QR. El QR cambia cada 30 segundos (una captura no sirve). El garzón lo escanea en *Escanear*: las coronas se descuentan en ese momento y el garzón informa el monto a caja antes de emitir la boleta.
-3. **Sumar (al pagar):** en *Cobrar*, el garzón ingresa el total pagado (después del descuento), las personas y, si quiere, el número de mesa. La app muestra la parte por persona y genera un QR que dura **10 minutos**.
+3. **Sumar (al pagar):** en *Cobrar*, el garzón ingresa el total pagado (después del descuento), **cuántas personas van a sumar coronas** (no el total de la mesa; decisión de Martín, 27-10-2026) y, si quiere, el número de mesa. La cuenta se divide en partes iguales entre ellas. La app muestra la parte por persona y genera un QR que dura **10 minutos**.
 4. Cada socio escanea el QR (con la cámara del teléfono o dentro de la app, en *Coronas → Sumar*), ve el monto y su parte, y toca **Sumar mis coronas**. Una vez por persona; las partes que nadie escanea se pierden. Si el QR vence, el garzón puede renovarlo (cambia el código) durante las primeras 3 horas.
 5. **Cumpleaños:** el día de su cumpleaños el socio ve su QR de regalo. El garzón lo escanea, revisa la cédula y marca la casilla antes de entregar la michelada (también sin alcohol). Una vez al año.
 

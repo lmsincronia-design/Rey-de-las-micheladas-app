@@ -97,9 +97,9 @@ function handleSessionError(e){
 function cobrarPage(){
  const active=load(TABLE_KEY);
  if(active?.id&&active.location===store.location?.id)return tablePage(active.id);
- shell(`${heading('AL ENTREGAR LA CUENTA','QR DE LA MESA.','Ingresa el total que paga la mesa y cuántas personas son. La cuenta se divide en partes iguales.')}
+ shell(`${heading('AL ENTREGAR LA CUENTA','QR DE LA MESA.','Ingresa el total que paga la mesa y cuántas personas van a sumar coronas. La cuenta se divide en partes iguales entre ellas.')}
  <form class="panel g-bill" id="bill"><label>Total de la cuenta<span class="money-input"><b>$</b><input name="amount" inputmode="numeric" autocomplete="off" placeholder="0" required></span></label>
- <fieldset class="people-picker"><legend>Personas en la mesa</legend><div class="chips">${Array.from({length:10},(_,i)=>i+1).map(n=>`<label class="chip"><input type="radio" name="people" value="${n}" ${n===2?'checked':''}><span>${n}</span></label>`).join('')}<label class="chip chip-more"><input type="radio" name="people" value="more"><span>Más</span></label></div><label class="people-more">Cuántos son (11 a 20)<input name="people_more" type="number" inputmode="numeric" min="11" max="20"></label></fieldset>
+ <fieldset class="people-picker"><legend>¿Cuántos van a sumar coronas? <small>Pregunta en la mesa quiénes son del Club</small></legend><div class="chips">${Array.from({length:10},(_,i)=>i+1).map(n=>`<label class="chip"><input type="radio" name="people" value="${n}" ${n===2?'checked':''}><span>${n}</span></label>`).join('')}<label class="chip chip-more"><input type="radio" name="people" value="more"><span>Más</span></label></div><label class="people-more">Cuántos son (11 a 20)<input name="people_more" type="number" inputmode="numeric" min="11" max="20"></label></fieldset>
  <label><span>Mesa <small class="opt">(opcional)</small></span><input name="label" maxlength="20" placeholder="Ej. 7 o Terraza 2" autocomplete="off"></label>
  <div class="split-preview" id="split" aria-live="polite"></div>
  <button class="btn full" type="submit">${icon('qr')}<span>Generar QR de la mesa</span></button></form>
@@ -128,7 +128,7 @@ async function tablePage(id,initial){
  const url=`${publicOrigin()}/mesa?qr=${t.code}`;
  const done=t.claimed>=t.people;
  shell(`<section class="table-qr${t.cancelled?' cancelled':''}">
-  <div class="table-qr-head"><span class="pill">${t.table_label?'MESA '+esc(t.table_label):'MESA'}</span><span class="g-total">${money(t.amount)} · ${t.people} persona${t.people===1?'':'s'}</span></div>
+  <div class="table-qr-head"><span class="pill">${t.table_label?'MESA '+esc(t.table_label):'MESA'}</span><span class="g-total">${money(t.amount)} entre ${t.people}</span></div>
   <h1>${money(t.part)}<small>por persona</small></h1>
   ${t.cancelled?'<p class="g-alert">Cuenta anulada por el encargado.</p>':t.expired?'<p class="g-alert">El QR venció. Renuévalo si alguien aún no suma.</p>':`<div class="qr big">${qrSvg(url)}</div><div class="code">${pretty(t.code)}</div><div class="qr-timer" aria-hidden="true"><span></span></div><small class="qr-left" id="table-left"></small>`}
   <div class="claims"><div class="claims-bar"><span style="width:${Math.min(100,t.claimed/t.people*100)}%"></span></div><p><strong id="claimed">${t.claimed} de ${t.people}</strong> ya sumaron sus coronas${done?' ✓':''}</p></div>

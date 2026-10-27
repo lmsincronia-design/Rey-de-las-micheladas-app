@@ -89,3 +89,4 @@
 .team-actions{display:flex;gap:8px;width:100%;margin-top:6px}
 .team-actions .btn{flex:1}
 @media(min-width:700px){.g-main{max-width:640px}}
+.g-bill .people-picker legend small{display:block;margin-top:5px;font-weight:500}
