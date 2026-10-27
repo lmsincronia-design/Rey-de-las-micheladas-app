@@ -32,13 +32,13 @@ Sigue [la guía de Supabase y Vercel](docs/CONEXION-SUPABASE-VERCEL.md). Incluye
 
 [Guía de carga SQL, cinco boletas y recorrido completo](docs/PRUEBA-MARTIN-LUIS.md). Incluye una boleta de $60.000, 5.000 coronas para Martín y 3.000 para Luis, sin duplicar al repetir. Requiere cuentas existentes y activar la prueba desde administración; instalar el código no modifica saldos por sí solo.
 
-## Mesas compartidas
+## QR de la mesa y app del garzón
 
-[Guía de reparto, caja e invitados nuevos](docs/MESAS-COMPARTIDAS.md). Una mesa de $100.000 entre cinco acredita a cada persona sobre $20.000 según su rango. El pagador comparte un enlace con cuatro cupos; el invitado puede registrarse y reclamar después. Requiere la migración 006.
+[Guía completa](docs/QR-MESA-Y-GARZON.md). El garzón ingresa en `/garzon` el total y las personas; la cuenta se divide en partes iguales y cada socio escanea el QR (10 minutos) para sumar su parte × el % de su rango. Mínimo $5.000 por persona. El canje es con un QR del socio que cambia cada 30 segundos y se descuenta al escanearlo. Ya no hay enlaces para repartir la mesa ni fichas reservadas. Requiere la migración `202610270001_qr_mesa_y_garzon.sql`.
 
 ## Qué incluye esta versión
 
-- Registro con nombre, apellido, RUT con dígito verificador, celular chileno, cumpleaños, correo, contraseña y aceptación de términos. Acceso para mayores de 18 años.
+- Registro con nombre, apellido, fecha de nacimiento, correo, contraseña y aceptación de términos; celular opcional y sin RUT. Acceso para mayores de 18 años.
 - Inicio de sesión por correo/contraseña, confirmación de correo, sesión persistente, recuperación y cierre de sesión.
 - Selector por comuna, orden opcional por cercanía (GPS solo en el navegador), carta externa por local.
 - Invitación por código/QR, lectura QR cuando el navegador soporta `BarcodeDetector`, solicitudes y aceptación de amistad.
@@ -47,13 +47,14 @@ Sigue [la guía de Supabase y Vercel](docs/CONEXION-SUPABASE-VERCEL.md). Incluye
 - Notificaciones **dentro de la app**, vía Supabase Realtime y consulta periódica de respaldo. No son push con la app cerrada ni mensajes de WhatsApp.
 - **Ranking Top 10** (`/ranking`): podio, posición propia ("TOP 27") y vista de ejemplo con perfiles ficticios. Nombre público solo con consentimiento. Guía: [docs/RANKING.md](docs/RANKING.md). Requiere la migración `202610130001_ranking.sql`.
 - Rangos del prototipo: Plebeyo, Comerciante, Guardia Real, Noble y Rey. Porcentajes 4/6/8/10/12 según consumo de 12 meses; las transferencias no aumentan el rango.
-- Código de socio y código de mesa con cantidad de personas. Enlaces con cupos para que los acompañantes reclamen su parte, conservados durante registro y confirmación de correo.
+- QR de la mesa generado por el garzón (`/garzon`): partes iguales, una vez por socio, 10 minutos, máximo 3 cuentas al día. Si alguien abre el QR sin cuenta, la app lo recuerda 30 minutos mientras se registra.
 - Rangos con distintivos y barra de progreso permanente en la cabecera para usuarios conectados.
 - Código de socio para caja. Boletas idempotentes, acreditación por persona, espera de 24 horas y tope de 8.000 coronas por persona/boleta.
-- Ficha de descuento de 10 minutos, reserva y devolución al cancelar/vencer. Hasta 20.000, mínimo 1.000, múltiplos de 500 y un canje diario.
+- Canje con QR del socio que cambia cada 30 segundos; se descuenta al escanearlo el garzón. De 1.000 a 20.000, múltiplos de 500, un canje diario. El encargado puede anularlo dentro de 2 horas.
+- Cumpleaños: una michelada de regalo al año con QR, validando la cédula.
 - Panel `/admin`: resumen, socios recientes, mantenimiento de locales/cartas verificadas y acreditaciones manuales de coronas con motivo e historial. Solo administradores, hasta 20.000 por carga, saldo inmediato sin aumentar rango. Requiere la migración `202610070002_admin_credits.sql`.
 - Panel `/caja`: consulta de socios, aplicación de fichas, registro y anulación de boletas. Solo cuentas con permiso, limitado al local correspondiente.
-- Pantalla `/coronas`: saldo y tres pasos en pestañas, en el orden de una visita: **1 · Usar mis coronas** (antes de pedir la cuenta: ficha de descuento), **2 · Sumar mi compra** (después de pagar: código de la boleta y mesas compartidas) y **3 · Regalar a un amigo**. Se abre en "Usar" si hay saldo o una ficha activa y en "Sumar" si no; `?tab=usar|sumar|regalar` abre una pestaña concreta. El formulario usa las boletas del piloto; los códigos de compras reales aún requieren integración.
+- Pantalla `/coronas`: saldo y tres pasos en pestañas, en el orden de una visita: **1 · Usar mis coronas** (antes de pedir la cuenta: QR de canje), **2 · Sumar mi compra** (al pagar: escanear el QR de la mesa) y **3 · Regalar a un amigo**. Se abre en "Usar" si hay saldo o una ficha activa y en "Sumar" si no; `?tab=usar|sumar|regalar` abre una pestaña concreta. Las boletas ficticias del piloto se canjean solo en `/pruebas`.
 - Pantalla `/pruebas`: piloto autorizado por administrador para dos cuentas, cinco boletas ficticias de un uso, local virtual restringido, coronas pendientes 24 horas desde el canje del código y cierre con auditoría conservada.
 - API `/api/pos` para integración externa, con llave independiente por local y credenciales guardadas en el servidor.
 

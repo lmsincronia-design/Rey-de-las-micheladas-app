@@ -46,7 +46,7 @@ try{
   else if(path==='/rest/v1/profiles')data={id:me,first_name:'Martín',last_name:'Arellano',rut:'123456785',phone:'+56912345678',birthday:'1990-10-08',member_code:'49A1B0AE87CB',share_activity:true,ranking_visible:false};
   else if(path==='/rest/v1/notifications')data=notifications;
   else if(path==='/rest/v1/ledger')data=ledger;
-  else if(path==='/rest/v1/redemptions')data=[{id:'r1',amount:3000,code:'K7Q2MX',status:'reserved',expires_at:iso(8*60e3),created_at:iso(-2*60e3)}];
+  else if(path==='/rest/v1/redemptions')data=[];
   else if(path.endsWith('/my_wallet'))data={balance:11600,pending:3600,debt:0,spending:90000,tier:'Comerciante',pct:6};
   else if(path.endsWith('/my_staff_role'))data=process.env.CAPTURA_ADMIN?{role:'admin',location_id:null}:null;
   else if(path.endsWith('/my_friends'))data=[{id:'f1',other_id:luis,first_name:'Luis',last_name:'M.',status:'accepted',incoming:false,muted:false},{id:'f2',other_id:ana,first_name:'Ana',last_name:'P.',status:'pending',incoming:true,muted:false}];
@@ -57,7 +57,9 @@ try{
   else if(path.endsWith('/admin_locations'))data=locations;
   else if(path.endsWith('/admin_members'))data=[{member_code:'49A1B0AE87CB',first_name:'Martín',last_name:'Arellano',balance:11600},{member_code:'123456ABCDEF',first_name:'Luis',last_name:'M.',balance:2400}];
   else if(path.endsWith('/admin_credit_history'))data=[];
-  else if(path.endsWith('/table_share_info'))data={location_name:'Pío Nono 105',people:3,amount:50000,part:16666,payer_name:'Martín A.',slots:2,expired:false};
+  else if(path.endsWith('/table_qr_info'))data={code:'K7M2Q9XD',amount:60000,people:3,part:20000,remaining:2,expires_at:iso(540e3),expired:false,cancelled:false,table_label:'7',location_name:'Pío Nono 105',claimed:false,earned:null,available_at:null};
+  else if(path.endsWith('/my_birthday'))data={today:Boolean(process.env.CAPTURA_CUMPLE),claimed:false};
+  else if(path.endsWith('/admin_local_access'))data=locations.slice(0,3).map((l,i)=>({id:l.id,name:l.name,is_test:false,active:true,has_access:i===0,locked:false,devices:i===0?1:0,waiters:i===0?[{id:'w1',name:'Carla',role:'manager',active:true},{id:'w2',name:'Pedro',role:'waiter',active:true}]:[]}));
   else data=null;
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
  });
@@ -68,7 +70,7 @@ try{
  await page.goto(base+'/entrar');await page.waitForLoadState('networkidle');
  await page.getByLabel('Correo electrónico').fill('martin@example.test');await page.getByLabel('Contraseña',{exact:true}).fill('UnaClaveSegura123');await shot('02-entrar');
  await page.getByRole('button',{name:/Entrar al Club/}).click();await page.waitForURL(u=>!/entrar/.test(u.pathname),{timeout:8000}).catch(()=>{});await page.waitForLoadState('networkidle');
- const views=[['10-inicio','/'],['11-carta','/locales'],['12-amigos','/amigos'],['13-coronas','/coronas'],['14-coronas-sumar','/coronas?tab=sumar'],['15-coronas-regalar','/coronas?tab=regalar'],['16-ranking','/ranking'],['17-ranking-ejemplo','/ranking?demo=1'],['18-rangos','/rangos'],['19-perfil','/perfil'],['20-notificaciones','/notificaciones'],['21-codigo','/codigo'],['22-pruebas','/pruebas'],['23-terminos','/terminos'],['24-mesa','/mesa?codigo=abc123']];
+ const views=[['10-inicio','/'],['11-carta','/locales'],['12-amigos','/amigos'],['13-coronas','/coronas'],['14-coronas-sumar','/coronas?tab=sumar'],['15-coronas-regalar','/coronas?tab=regalar'],['16-ranking','/ranking'],['17-ranking-ejemplo','/ranking?demo=1'],['18-rangos','/rangos'],['19-perfil','/perfil'],['20-notificaciones','/notificaciones'],['21-codigo','/codigo'],['22-pruebas','/pruebas'],['23-terminos','/terminos'],['24-mesa','/mesa?qr=K7M2Q9XD']];
  if(process.env.CAPTURA_ADMIN)views.push(['30-admin','/admin'],['31-caja','/caja']);
  for(const [name,path] of views){await page.goto(base+path);await page.waitForLoadState('networkidle');await shot(name,true);}
  console.log(`${views.length+3} capturas en ${out} (${W}x${H})`);

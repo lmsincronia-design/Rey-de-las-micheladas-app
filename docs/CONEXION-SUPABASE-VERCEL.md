@@ -155,4 +155,4 @@ Antes de recibir clientes reales: validar márgenes/porcentajes/topes con el Rey
 
 ## Reparto por mesa y acompañantes sin cuenta
 
-Sigue [Mesas compartidas](MESAS-COMPARTIDAS.md) para el código de mesa, caja y reclamo por enlace después de registrarse. La migración 006 no requiere nuevas claves ni redirecciones de Auth.
+Aplica también `202610270001_qr_mesa_y_garzon.sql` y sigue [QR de la mesa y app del garzón](QR-MESA-Y-GARZON.md). No requiere nuevas claves ni variables: la app del garzón vive en `/garzon` del mismo despliegue.

@@ -15,7 +15,7 @@ try{
  await page.routeWebSocket('wss://club-test.supabase.co/**',ws=>ws.close());
  const martin='00000000-0000-4000-8000-000000000001',luis='00000000-0000-4000-8000-000000000002';
  const calls=[];let balance=5000,pending=1200,muted=false,sharing=true,isAdmin=false;
- let rankingVisible=false;const credits=[];let pilot=null;
+ let rankingVisible=false;const credits=[];let pilot=null;let redeemCodes=0,statusChecks=0,redeemed=false,tableClaimed=false;
  const token=`${Buffer.from('{}').toString('base64url')}.${Buffer.from(JSON.stringify({sub:martin,exp:Math.floor(Date.now()/1000)+3600})).toString('base64url')}.test`;
  const user={id:martin,aud:'authenticated',role:'authenticated',email:'martin@example.test',email_confirmed_at:new Date().toISOString(),user_metadata:{},app_metadata:{provider:'email'},created_at:new Date().toISOString()};
  const local={id:'10000000-0000-4000-8000-000000000001',name:'Local de prueba',address:'Dirección de prueba',commune:'Santiago',menu_url:'https://qrfy.io/p/oOBx-dlqTy',active:true,verified:true};
@@ -50,14 +50,22 @@ try{
  else if(path.endsWith('/club_ranking'))data={total:128,limit:10,visible:rankingVisible,top:[{position:1,name:'Cote M.',tier:'Rey',me:false},{position:2,name:null,tier:'Noble',me:false}],me:{position:27,tier:'Plebeyo',gap:38500,gap_top:112000}};
  else if(path.endsWith('/set_ranking_visibility')){rankingVisible=body.enabled;data=null;}
  else if(path.endsWith('/request_friend'))data=null;
+ else if(path.endsWith('/my_birthday'))data={today:false,claimed:false};
+ else if(path.endsWith('/admin_local_access'))data=[{id:local.id,name:local.name,is_test:false,active:true,has_access:true,locked:false,devices:1,waiters:[{id:'w1',name:'Carla',role:'manager',active:true}]}];
+ else if(path.endsWith('/redeem_qr')){redeemCodes++;data={code:'C7KM2Q9XD'+'ABCDEFGH'[redeemCodes%8],amount:body.amount_value,expires_at:new Date(Date.now()+30000).toISOString(),now:new Date().toISOString()};}
+ else if(path.endsWith('/member_qr_status')){statusChecks++;const used=statusChecks>=2;if(used&&!redeemed){redeemed=true;balance-=5000;}data={used,expired:false,amount:5000,purpose:'redeem',location_name:used?'Local de prueba':null};}
+ else if(path.endsWith('/table_qr_info'))data={code:'K7M2Q9XD',amount:60000,people:3,part:20000,remaining:tableClaimed?2:3,expires_at:new Date(Date.now()+600000).toISOString(),expired:false,cancelled:false,table_label:'7',location_name:'Local de prueba',claimed:tableClaimed,earned:tableClaimed?800:null,available_at:tableClaimed?new Date(Date.now()+86400000).toISOString():null};
+ else if(path.endsWith('/claim_table_qr')){const again=tableClaimed;if(!tableClaimed){tableClaimed=true;pending+=800;}data={earned:800,part:20000,pct:4,tier:'Plebeyo',available_at:new Date(Date.now()+86400000).toISOString(),already_claimed:again};}
  else throw new Error('Unexpected test request: '+path);
  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
  });
  await page.goto(base);await page.getByRole('heading',{name:/LA BUENA/}).waitFor();
  await page.getByRole('link',{name:'Unirme al Club'}).click();await page.getByRole('heading',{name:'Crear cuenta',exact:true}).waitFor();
- await page.getByLabel('Nombre',{exact:true}).fill('Martín');await page.getByLabel('Apellido',{exact:true}).fill('Soto');await page.getByLabel('RUT',{exact:true}).fill('12.345.678-9');await page.getByLabel('Celular',{exact:true}).fill('+56912345678');await page.getByLabel('Fecha de nacimiento').fill('1990-10-08');await page.getByLabel('Correo electrónico').fill('martin@example.test');await page.getByLabel('Contraseña (mínimo').fill('UnaClaveSegura123');await page.getByLabel('Repite tu contraseña').fill('UnaClaveSegura123');await page.getByRole('checkbox',{name:/Soy mayor/}).check();await page.getByRole('button',{name:/Crear mi cuenta/}).click();await page.getByRole('status').filter({hasText:/Revisa el RUT/}).waitFor();assert.equal(calls.filter(c=>c.path.endsWith('/signup')).length,0);
- await page.getByLabel('RUT',{exact:true}).fill('12.345.678-5');await page.getByRole('button',{name:/Crear mi cuenta/}).click();await page.getByText('Revisa tu correo para confirmar la cuenta.').waitFor();
- const signup=calls.find(c=>c.path.endsWith('/signup'));assert.equal(signup.body.data.rut,'123456785');assert.equal(signup.body.data.phone,'+56912345678');
+ // Registro sin RUT y con celular opcional (propuesta oct-2026): un celular mal escrito sí se rechaza.
+ assert.equal(await page.getByLabel('RUT',{exact:true}).count(),0);
+ await page.getByLabel('Nombre',{exact:true}).fill('Martín');await page.getByLabel('Apellido',{exact:true}).fill('Soto');await page.getByLabel(/Celular/).fill('12345');await page.getByLabel('Fecha de nacimiento').fill('1990-10-08');await page.getByLabel('Correo electrónico').fill('martin@example.test');await page.getByLabel('Contraseña (mínimo').fill('UnaClaveSegura123');await page.getByLabel('Repite tu contraseña').fill('UnaClaveSegura123');await page.getByRole('checkbox',{name:/Soy mayor/}).check();await page.getByRole('button',{name:/Crear mi cuenta/}).click();await page.getByRole('status').filter({hasText:/celular chileno/}).waitFor();assert.equal(calls.filter(c=>c.path.endsWith('/signup')).length,0);
+ await page.getByLabel(/Celular/).fill('');await page.getByRole('button',{name:/Crear mi cuenta/}).click();await page.getByText('Revisa tu correo para confirmar la cuenta.').waitFor();
+ const signup=calls.find(c=>c.path.endsWith('/signup'));assert.equal('rut' in signup.body.data,false);assert.equal(signup.body.data.phone,null);assert.equal(signup.body.data.birthday,'1990-10-08');
  await page.goto(base+'/olvide-contrasena');await page.getByLabel('Correo electrónico').fill('martin@example.test');await page.getByRole('button',{name:'Enviar enlace →'}).click();await page.getByText(/Si existe una cuenta/).waitFor();
  await page.goto(base+'/entrar');await page.getByLabel('Correo electrónico').fill('martin@example.test');await page.getByLabel('Contraseña',{exact:true}).fill('UnaClaveSegura123');await page.getByRole('button',{name:'Entrar al Club →'}).click();await page.getByText('HOLA, MARTÍN').waitFor();
  await page.goto(base+'/locales');await page.getByRole('heading',{name:'ELIGE TU REY.'}).waitFor();
@@ -96,21 +104,37 @@ try{
  assert.deepEqual((await page.getByRole('tab').allTextContents()).map(s=>s.replace(/\s+/g,' ').trim()),['1Usar mis coronasAntes de pedir la cuenta','2Sumar mi compraDespués de pagar','3Regalar a un amigoCuando quieras']);
  // Con saldo disponible se abre en "Usar"; "Sumar mi compra" no se ve hasta elegirlo
  assert.equal(await page.getByRole('tab',{name:/Usar mis coronas/}).getAttribute('aria-selected'),'true');
- assert.equal(await page.getByRole('heading',{name:'Ingresa tu boleta',exact:true}).isVisible(),false);
+ assert.equal(await page.getByRole('heading',{name:'Escanea el QR de tu mesa',exact:true}).isVisible(),false);
  await page.getByText('Hazlo antes de pedir la cuenta.').waitFor();
- const walletOrder=(await page.locator('.balance-card h2,.wallet-actions h2').allTextContents()).map(s=>s.trim());assert.deepEqual(walletOrder,['$13.000','Usarlas en una junta','Ingresa tu boleta','Coronas para un amigo']);
- await page.getByRole('tab',{name:/Sumar mi compra/}).click();await page.getByText('Hazlo después de pagar.').waitFor();await page.getByRole('heading',{name:'Ingresa tu boleta',exact:true}).waitFor();
- assert.equal(await page.getByRole('heading',{name:'Usarlas en una junta',exact:true}).isVisible(),false);
+ const walletOrder=(await page.locator('.balance-card h2,.wallet-actions h2').allTextContents()).map(s=>s.trim());assert.deepEqual(walletOrder,['$13.000','Usa tus coronas','Escanea el QR de tu mesa','Coronas para un amigo']);
+ // Ya no hay fichas reservadas ni enlaces de mesa.
+ assert.equal(calls.filter(c=>/create_redemption|prepare_table|my_table_checkouts|my_receipt_tables/.test(c.path)).length,0);
+ await page.getByRole('tab',{name:/Sumar mi compra/}).click();await page.getByText('Hazlo al pagar.').waitFor();await page.getByRole('heading',{name:'Escanea el QR de tu mesa',exact:true}).waitFor();
+ assert.equal(await page.getByRole('heading',{name:'Usa tus coronas',exact:true}).isVisible(),false);
  assert.match(page.url(),/tab=sumar/);
  await mkdir('test/artifacts',{recursive:true});await page.screenshot({path:'test/artifacts/coronas-paso-sumar.png',fullPage:true});
  await page.getByRole('tab',{name:/Regalar a un amigo/}).click();await page.getByLabel('Coronas a enviar').waitFor();await page.screenshot({path:'test/artifacts/coronas-paso-regalar.png',fullPage:true});
- await page.getByRole('tab',{name:/Usar mis coronas/}).click();await page.getByRole('heading',{name:'Usarlas en una junta',exact:true}).waitFor();await page.screenshot({path:'test/artifacts/coronas-paso-usar.png',fullPage:true});
- await page.getByRole('tab',{name:/Sumar mi compra/}).click();await page.getByRole('heading',{name:'Ingresa tu boleta',exact:true}).waitFor();
- await page.getByLabel('Código de la boleta').fill('PRUEBA-NOEXISTE');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByRole('status').filter({hasText:/no encontrado/}).waitFor();assert.equal(balance,13000);
- await page.getByLabel('Código de la boleta').fill('PRUEBA-60000');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByRole('status').filter({hasText:/Boleta canjeada/}).waitFor();assert.equal(balance,13000);assert.equal(pending,3600);
- await page.getByText(/\$3.600 por activar/).waitFor();assert.equal(await page.getByRole('button',{name:'Activar mis coronas de prueba'}).count(),0);
- await page.getByLabel('Código de la boleta').fill('PRUEBA-60000');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByRole('status').filter({hasText:/Ya habías canjeado/}).waitFor();assert.equal(pending,3600);
- assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Wallet receipt mobile overflow');await page.screenshot({path:'test/artifacts/coronas-boleta-mobile.png',fullPage:true});
+ // Usar: elige el monto, muestra el QR (sin reservar saldo) y la app avisa cuando el garzón lo escanea.
+ await page.getByRole('tab',{name:/Usar mis coronas/}).click();await page.getByRole('heading',{name:'Usa tus coronas',exact:true}).waitFor();
+ await page.getByRole('button',{name:'$5.000',exact:true}).click();await page.getByRole('button',{name:'Mostrar mi QR al garzón'}).click();
+ await page.getByText('DESCUENTO DE $5.000').waitFor();await page.locator('.member-qr .qr svg').waitFor();assert.equal(balance,13000);
+ await page.screenshot({path:'test/artifacts/coronas-qr-canje.png',fullPage:true});
+ await page.getByRole('heading',{name:'¡Descuento aprobado!'}).waitFor({timeout:8000});assert.equal(balance,8000);
+ assert.equal(calls.find(c=>c.path.endsWith('/redeem_qr')).body.amount_value,5000);
+ // Sumar: el código del QR de la mesa lleva a /mesa, muestra la parte y suma una sola vez.
+ await page.getByRole('tab',{name:/Sumar mi compra/}).click();
+ await page.getByLabel(/Escribe el código/).fill('k7m2-q9xd');await page.getByRole('button',{name:'Continuar',exact:true}).click();
+ await page.getByRole('heading',{name:'$20.000'}).waitFor();await page.getByText('es tu parte: $60.000 entre 3 personas.').waitFor();
+ await page.getByRole('button',{name:'Sumar mis coronas'}).click();await page.getByText(/¡Listo! Sumaste \$800 en coronas/).waitFor();assert.equal(pending,2000);
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Mesa mobile overflow');await page.screenshot({path:'test/artifacts/mesa-sumar.png',fullPage:true});
+ await page.goto(base+'/mesa?qr=K7M2Q9XD');await page.getByText(/Ya sumaste esta mesa/).waitFor();assert.equal(pending,2000);
+ // Boletas ficticias del piloto: solo en /pruebas.
+ await page.goto(base+'/pruebas');await page.getByRole('heading',{name:'Canjear boleta de prueba'}).waitFor();
+ await page.getByLabel('Código de la boleta').fill('PRUEBA-NOEXISTE');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByRole('status').filter({hasText:/no encontrado/}).waitFor();
+ await page.getByLabel('Código de la boleta').fill('PRUEBA-60000');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByRole('status').filter({hasText:/Boleta canjeada/}).waitFor();assert.equal(pending,4400);
+ await page.getByLabel('Código de la boleta').fill('PRUEBA-60000');await page.getByRole('button',{name:'Canjear boleta',exact:true}).click();await page.getByRole('status').filter({hasText:/Ya habías canjeado/}).waitFor();assert.equal(pending,4400);
+ await page.goto(base+'/coronas?tab=usar');await page.getByText(/\$4.400 por activar/).waitFor();
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Wallet mobile overflow');await page.screenshot({path:'test/artifacts/coronas-usar-mobile.png',fullPage:true});
  await page.setViewportSize({width:1440,height:1000});
  const tabBoxes=await page.getByRole('tab').evaluateAll(items=>items.map(item=>{const r=item.getBoundingClientRect();return {top:Math.round(r.top),bottom:r.bottom};}));const panelTop=await page.locator('.coin-tab:not([hidden])').evaluate(el=>el.getBoundingClientRect().top);assert.ok(tabBoxes.every(b=>b.top===tabBoxes[0].top),'Los tres pasos van en una sola fila');assert.ok(panelTop>=tabBoxes[0].bottom,'El contenido del paso queda bajo las pestañas');
  await page.screenshot({path:'test/artifacts/coronas-boleta-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:844});
@@ -121,5 +145,5 @@ try{
  await page.goto(base+'/rangos');await page.getByRole('heading',{name:'Guardia Real',exact:true}).waitFor();for(const pct of [4,6,8,10,12])await page.getByText(pct+'%',{exact:true}).waitFor();
  await page.goto(base+'/carta-prueba');await page.getByRole('heading',{name:'LA JUNTA DE PRUEBA.'}).waitFor();
  await page.setViewportSize({width:1440,height:1000});await page.goto(base);await page.getByText('HOLA, MARTÍN').waitFor();await page.screenshot({path:'test/artifacts/inicio-desktop.png',fullPage:true});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
- assert.deepEqual(errors,[]);console.log('Browser: registration validation, confirmation, login, recovery, menu-open notification, friend mute, invite, transfer, admin credit confirmation/cancel/history, pilot setup/closure, wallet receipt claim/retry/pending balance and vertical order, new tiers, test menu, 10 mobile routes and desktop layout passed (simulated Supabase HTTP).');
+ assert.deepEqual(errors,[]);console.log('Browser: registration without RUT, confirmation, login, recovery, menu-open notification, friend mute, invite, transfer, admin credit and local access panel, pilot setup/closure, redeem QR, table QR claim/retry, pilot receipts, tiers, test menu, mobile routes and desktop layout passed (simulated Supabase HTTP).');
 }finally{await browser?.close();server.kill();}

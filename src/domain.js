@@ -22,8 +22,8 @@ export function adultBirthday(value, today = new Date()) {
 }
 export function validateRegistration(data) {
   if (data.first_name.trim().length < 2 || data.last_name.trim().length < 2) throw new Error('Ingresa tu nombre y apellido.');
-  if (!validRut(data.rut)) throw new Error('Revisa el RUT y su dígito verificador.');
-  if (!/^\+569\d{8}$/.test(normalizePhone(data.phone))) throw new Error('Ingresa un celular chileno: +56 9 y ocho dígitos.');
+  // Sin RUT (propuesta oct-2026) y celular opcional; si lo escriben, debe ser válido.
+  if (String(data.phone||'').trim() && !/^\+569\d{8}$/.test(normalizePhone(data.phone))) throw new Error('Ingresa un celular chileno: +56 9 y ocho dígitos, o déjalo en blanco.');
   if (!adultBirthday(data.birthday)) throw new Error('Debes tener entre 18 y 110 años para unirte al Club.');
   if (!data.terms) throw new Error('Acepta los términos para continuar.');
   if (data.password.length < 10) throw new Error('Usa una contraseña de al menos 10 caracteres.');

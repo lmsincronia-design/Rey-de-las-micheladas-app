@@ -3,6 +3,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/garzon",
+      "destination": "/garzon.html"
+    },
+    {
+      "source": "/garzon/:path*",
+      "destination": "/garzon.html"
+    },
+    {
       "source": "/((?!api/|assets/|fonts/|favicon|manifest.webmanifest).*)",
       "destination": "/index.html"
     }

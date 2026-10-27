@@ -186,7 +186,7 @@ test('test vouchers and virtual location are restricted to selected accounts',as
  assert.equal((await db.query('select id from locations where id=$1',[testLocation])).rows.length,0);
  await rejected(()=>call('claim_test_receipt',['PRUEBA-60000']),/no participa/);
  await rejected(()=>call('activate_my_test_crowns'),/does not exist/);
- await rejected(()=>call('create_redemption',[testLocation,1000,crypto.randomUUID()]),/Local no disponible/);
+ await rejected(()=>call('create_redemption',[testLocation,1000,crypto.randomUUID()]),/permission denied/); // fichas reservadas retiradas: el canje es con QR
  await rejected(()=>call('announce_location',[testLocation]),/Local no disponible/);
  await rejected(()=>db.query('select * from test_vouchers'),/permission denied/);
  await db.exec('set role anon');assert.equal((await db.query('select id from locations where id=$1',[testLocation])).rows.length,0);
@@ -253,7 +253,7 @@ test('table codes fix party size, require login and cannot be edited directly',a
  await rejected(()=>call('prepare_table',[4,request]),/Solicitud ya utilizada/);
  await uid(diners[1]);await rejected(()=>call('prepare_table',[5,request]),/Solicitud ya utilizada/);
  await db.exec('set role authenticated');await rejected(()=>db.query('update table_checkouts set people=1'),/permission denied/);
- assert.equal((await call('my_table_checkouts')).length,0);await db.exec('reset role');
+ await rejected(()=>call('my_table_checkouts'),/permission denied/);await rejected(()=>call('prepare_table',[5,crypto.randomUUID()]),/permission denied/);await db.exec('reset role');
 });
 test('cashier registers 100000 / 5, payer earns only their share, and exposes four guest slots',async()=>{
  await uid(luis);const lookup=await call('staff_member',[local,groupCheckout.code]);assert.equal(lookup.people,5);
@@ -264,18 +264,18 @@ test('cashier registers 100000 / 5, payer earns only their share, and exposes fo
  await uid(diners[0]);const tables=await call('my_receipt_tables');assert.equal(tables.length,1);assert.equal(tables[0].part,20000);assert.equal(tables[0].claimed,1);groupToken=tables[0].token;
  assert.equal((await call('my_wallet')).balance,0);assert.equal((await call('my_wallet')).pending,1200);
  const own=await call('claim_table_share',[groupToken]);assert.equal(own.already_claimed,true);assert.equal(own.earned,1200);
- await uid(null);await db.exec('set role anon');const preview=await call('table_share_info',[groupToken]);assert.equal(preview.remaining,4);assert.equal(preview.part,20000);assert.equal(preview.earned,null);assert.ok(!JSON.stringify(preview).includes(diners[0]));
+ await uid(null);const preview=await call('table_share_info',[groupToken]);await db.exec('set role anon');await rejected(()=>call('table_share_info',[groupToken]),/permission denied/);assert.equal(preview.remaining,4);assert.equal(preview.part,20000);assert.equal(preview.earned,null);assert.ok(!JSON.stringify(preview).includes(diners[0]));
  await rejected(()=>call('claim_table_share',[groupToken]),/permission denied/);await rejected(()=>db.query('select * from receipt_tables'),/permission denied/);await db.exec('reset role');
 });
 test('each guest claims once at their own rate, including a new Plebeyo, with 24-hour waiting periods',async()=>{
  await db.query('insert into auth.users values($1,$2)',[diners[1],JSON.stringify({first_name:'Invitado nuevo',last_name:'Prueba',rut:fixtureRut('30000001'),phone:'+56912345678',birthday:'1990-01-01',terms:true})]);
  const expected=[800,1600,2000,2400];
  for(let i=1;i<=4;i++){
-  await uid(diners[i]);await db.exec('set role authenticated');
+  await uid(diners[i]); // los enlaces se retiraron de la app; la lógica se conserva para el historial
   const claim=await call('claim_table_share',[groupToken]);assert.equal(claim.earned,expected[i-1]);assert.equal(claim.part,20000);assert.equal(claim.already_claimed,false);
   assert.equal((await call('claim_table_share',[groupToken])).already_claimed,true);
   assert.equal((await call('my_wallet')).balance,0);assert.equal((await call('my_wallet')).pending,expected[i-1]);
-  assert.equal((await call('my_receipt_tables')).length,0);await db.exec('reset role');
+  assert.equal((await call('my_receipt_tables')).length,0);
  }
  const rows=(await db.query("select user_id,spending,extract(epoch from (available_at-created_at))::int as delay from ledger where receipt_id=$1 and kind='purchase'",[groupReceipt])).rows;
  assert.equal(rows.length,5);assert.equal(rows.reduce((sum,r)=>sum+r.spending,0),100000);assert.ok(rows.every(r=>r.delay===86400));

@@ -71,7 +71,7 @@ Registra la venta con **un solo código de mesa**, conservando la cantidad devue
 
 El código anterior es ilustrativo: usa el generado en la app. Caja aporta el monto real pagado. La función acredita al pagador su parte ($20.000), guarda el total y crea cuatro cupos de invitación. El pagador obtiene el enlace desde Coronas; no es necesario que el POS lo envíe. Los invitados reciben su propio porcentaje al reclamar. Los reintentos usan el mismo folio/código/datos incluso después de que otros hayan reclamado. El código no se puede reutilizar en otra boleta ni cambiar su cantidad de personas.
 
-Ver [Mesas compartidas](MESAS-COMPARTIDAS.md) para el flujo completo y los vencimientos.
+Las mesas ya no se reparten por enlace: ver [QR de la mesa y app del garzón](QR-MESA-Y-GARZON.md).
 
 ## Anular
 

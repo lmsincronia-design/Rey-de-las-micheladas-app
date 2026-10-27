@@ -159,24 +159,24 @@ input:focus,select:focus{outline:none;border-color:var(--yellow);box-shadow:0 0 
 .dash-title em{font-style:normal;color:var(--yellow)}
 
 /* Carta de socio */
-.pass{position:relative;overflow:hidden;isolation:isolate;display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:212px;padding:18px 18px 16px;border-radius:22px;color:#17130a;
+.pass{position:relative;overflow:hidden;isolation:isolate;display:flex;flex-direction:column;justify-content:space-between;gap:20px;min-height:212px;padding:20px 20px 18px;border-radius:22px;color:#17130a;
  background:linear-gradient(150deg,#ffd52b 0%,#fcca09 46%,#eeb800 100%);
  box-shadow:0 22px 44px -10px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.22) inset,0 1.5px 0 rgba(255,255,255,.55) inset,0 -2px 0 rgba(0,0,0,.12) inset}
-.pass::before{content:"";position:absolute;inset:0;z-index:-1;background:#8b6900;opacity:.3;-webkit-mask:url(/assets/marca/limones.png) -40px -30px/250px;mask:url(/assets/marca/limones.png) -40px -30px/250px}
+.pass::before{content:"";position:absolute;inset:0;z-index:-1;background:#8b6900;opacity:.16;-webkit-mask:url(/assets/marca/limones.png) -40px -30px/250px;mask:url(/assets/marca/limones.png) -40px -30px/250px}
 .pass::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(104deg,transparent 38%,rgba(255,255,255,.4) 50%,transparent 62%) 140% 0/260% 100% no-repeat;animation:brillo 7s ease-in-out 1.2s infinite}
 @keyframes brillo{0%,55%{background-position:140% 0}100%{background-position:-60% 0}}
 .pass>*{position:relative;z-index:1}
 .pass small{display:block;font:700 11.5px/1 var(--f-text);letter-spacing:.15em;text-transform:uppercase;opacity:.72}
-.pass-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.pass-brand{font:900 20px/.95 var(--f-display);letter-spacing:.04em;text-transform:uppercase}
-.pass-brand small{font:700 11.5px/1.1 var(--f-text);letter-spacing:.13em;margin-top:5px;opacity:.7}
+.pass-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pass-brand{font:700 11.5px/1.25 var(--f-text);letter-spacing:.14em;text-transform:uppercase;opacity:.7;max-width:9.5em}
+.pass-tier i{font:700 13px/1 var(--f-text);font-style:normal;color:rgba(255,255,255,.7);padding-left:7px;border-left:1px solid rgba(255,255,255,.25)}
 .pass-tier{display:inline-flex;align-items:center;gap:7px;padding:4px 11px 4px 5px;border-radius:99px;background:var(--black);color:var(--rank-color)}
 .pass-tier .rank-badge{width:30px;height:30px}
 .pass-tier b{font:900 17px/1 var(--f-display);letter-spacing:.04em;text-transform:uppercase}
 .pass-bal strong{display:flex;align-items:center;gap:8px;margin:7px 0 4px;font:900 clamp(50px,15vw,64px)/.9 var(--f-display);letter-spacing:.01em}
 .pass-bal strong .ic{width:.6em;height:.6em}
 .pass-bal em{font:600 14.5px/1.2 var(--f-text);font-style:normal;opacity:.78}
-.pass-bot{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:end}
+.pass-bot{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:end}
 .pass-bot b{display:block;margin-top:5px;font:700 16px/1.1 var(--f-text);text-transform:uppercase;letter-spacing:.03em;overflow-wrap:anywhere}
 .pass-code{font-variant-numeric:tabular-nums;letter-spacing:.1em!important}
 .pass-qr{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:var(--black);color:var(--yellow)}
@@ -381,8 +381,8 @@ input:focus,select:focus{outline:none;border-color:var(--yellow);box-shadow:0 0 
 /* ── Pantallas angostas y grandes ── */
 @media(max-width:380px){
  .act strong{font-size:22px}
- .pass-bot{grid-template-columns:1fr auto}
- .pass-bot>div:nth-child(2){display:none}
+ .pass-brand{display:none}
+ .pass-top{justify-content:flex-end}
 }
 @media(min-width:900px){
  .acts{grid-template-columns:repeat(4,1fr)}
@@ -420,3 +420,41 @@ main:has(.dash) .rank-strip{display:none}
 .topbar .brand>span{font-size:20px}
 .topbar .brand>span>span{font-size:20px;margin-top:0}
 @media(max-width:340px){.topbar .brand>span>span{display:none}.topbar .brand>span{font-size:18px}}
+
+/* ── QR de la mesa, canje con QR y cumpleaños (oct-2026) ── */
+.scan-panel .btn.full{margin:6px 0 4px}
+.scanner{position:relative;overflow:hidden;margin:14px 0 10px;border-radius:var(--r-l);background:#000;aspect-ratio:1/1;max-width:420px;margin-inline:auto}
+.scanner video{width:100%;height:100%;object-fit:cover;display:block}
+.scanner-frame{position:absolute;inset:16%;border:3px solid var(--yellow);border-radius:20px;box-shadow:0 0 0 999px rgba(0,0,0,.38)}
+.manual-code{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-top:16px}
+.manual-code label{margin:0}
+.manual-code input{text-transform:uppercase;letter-spacing:.14em;font-variant-numeric:tabular-nums}
+.manual-code .btn{min-height:52px}
+.amount-chips{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 16px}
+.chip-btn{min-height:44px;padding:0 14px;border-radius:99px;border:1.5px solid var(--line-2);background:var(--ink-2);color:var(--text);font:700 15px/1 var(--f-text);cursor:pointer}
+.chip-btn:active{transform:scale(.96)}
+.member-qr{margin-top:12px;padding:18px;border-radius:var(--r-l);background:var(--yellow);color:#17130a;text-align:center}
+.member-qr .eyebrow{color:rgba(0,0,0,.7);margin-bottom:4px}
+.member-qr .qr{width:min(260px,100%);margin:12px auto;border-radius:16px}
+.member-qr .code{margin:4px 0 10px;color:#17130a;font:700 22px/1 var(--f-text);letter-spacing:.12em}
+.member-qr .btn.secondary{border-color:#17130a;color:#17130a;margin-top:12px}
+.member-qr.done{padding:22px}
+.member-qr.done h3{margin:0 0 6px;font:900 30px/1 var(--f-display);text-transform:uppercase}
+.member-qr.done p{color:#17130a;margin:0}
+.qr-timer{height:6px;border-radius:99px;background:rgba(23,19,10,.18);overflow:hidden}
+.qr-timer span{display:block;height:100%;background:#17130a;border-radius:99px;transition:width .5s linear}
+.qr-left{display:block;margin-top:6px;font:600 13px/1 var(--f-text);opacity:.75}
+.table-ticket h2{font-size:56px}
+.table-ticket .btn.full{margin-top:6px}
+.birthday-card{display:flex;gap:14px;align-items:flex-start;margin:0 0 16px;padding:16px 18px;border-radius:var(--r-l);background:linear-gradient(135deg,var(--red-ui),#a51d20);color:#fff}
+.birthday-card img{flex:none;width:56px;height:56px}
+.birthday-card div{flex:1;min-width:0}
+.birthday-card .eyebrow{color:rgba(255,255,255,.8);margin-bottom:4px}
+.birthday-card h2{margin:0 0 6px;font:900 30px/1 var(--f-display);text-transform:uppercase}
+.birthday-card p{margin:0 0 12px;color:#fff}
+.birthday-card .btn{background:var(--black);color:var(--yellow);box-shadow:none}
+.team-list{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:8px}
+.team-list li{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)}
+.team-list small{color:var(--muted)}
+.admin-locals h3{margin-top:0}
+.opt{font-weight:500;color:var(--muted)}

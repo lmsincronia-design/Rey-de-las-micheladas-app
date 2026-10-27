@@ -15,7 +15,7 @@ try{
  const violations=[];
  await page.addInitScript(()=>{document.addEventListener('securitypolicyviolation',e=>{(window.__csp=window.__csp||[]).push(e.violatedDirective+' '+e.blockedURI);});});
  await page.route('https://*.supabase.co/**',r=>r.fulfill({status:200,contentType:'application/json',body:'[]'}));
- for(const path of ['/','/registro','/entrar','/locales','/ranking?demo=1','/carta/index.html']){
+ for(const path of ['/','/registro','/entrar','/locales','/ranking?demo=1','/carta/index.html','/garzon.html']){
   await page.goto('http://localhost:4177'+path);await page.waitForTimeout(700);
   const v=await page.evaluate(()=>window.__csp||[]);v.forEach(x=>violations.push(path+' → '+x));
   const icons=await page.locator('svg.ic').count();const fontOk=await page.evaluate(()=>document.fonts.check('16px Cinzel')&&document.fonts.check('16px Anton'));
